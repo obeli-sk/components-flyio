@@ -1,0 +1,182 @@
+package activity-flyio:fly-http@1.0.0-beta;
+
+interface app {
+
+    record app {
+        name: string,
+        id: string,
+    }
+
+    /// Idempotently create a new fly.io app.
+    /// Using "personal" alias for org-slug works but will return an error on retry: "already exists but belongs to different organization"
+    create: func(org-slug: string, app-name: string) -> result<app, string>;
+    %list: func(org-slug: string) -> result<list<app>, string>;
+    delete: func(app-name: string, force: bool) -> result<_, string>;
+}
+
+interface machine {
+
+    enum machine-state {
+        created,
+        starting,
+        started,
+        stopping,
+        stopped,
+        suspending,
+        suspended,
+        replacing,
+        replaced,
+        destroying,
+        destroyed,
+    }
+
+    record machine-config {
+        image: string,
+        region: option<machine-region>,
+        guest: option<guest-config>,
+        auto-destroy: option<bool>,
+        init: option<init-config>,
+        env: option<list<tuple<string, string>>>,
+        restart: option<machine-restart>,
+        stop-config: option<stop-config>,
+    }
+
+    record guest-config {
+        cpu-kind: option<cpu-kind>,
+        cpus: option<u64>,
+        memory-mb: option<u64>,
+        kernel-args: option<list<string>>,
+    }
+
+    enum cpu-kind {
+        shared,
+        performance,
+    }
+
+    enum machine-region {
+        /// Amsterdam, Netherlands
+        ams,
+        /// Stockholm, Sweden
+        arn,
+        /// Atlanta, Georgia (US)
+        atl,
+        /// Bogotá, Colombia
+        bog,
+        /// Mumbai, India
+        bom,
+        /// Boston, Massachusetts (US)
+        bos,
+        /// Paris, France
+        cdg,
+        /// Denver, Colorado (US)
+        den,
+        /// Dallas, Texas (US)
+        dfw,
+        /// Secaucus, NJ (US)
+        ewr,
+        /// Ezeiza, Argentina
+        eze,
+        /// Frankfurt, Germany
+        fra,
+        /// Guadalajara, Mexico
+        gdl,
+        /// Rio de Janeiro, Brazil
+        gig,
+        /// Sao Paulo, Brazil
+        gru,
+        /// Hong Kong, Hong Kong
+        hkg,
+        /// Ashburn, Virginia (US)
+        iad,
+        /// Johannesburg, South Africa
+        jnb,
+        /// Los Angeles, California (US)
+        lax,
+        /// London, United Kingdom
+        lhr,
+        /// Madrid, Spain
+        mad,
+        /// Miami, Florida (US)
+        mia,
+        /// Tokyo, Japan
+        nrt,
+        /// Chicago, Illinois (US)
+        ord,
+        /// Bucharest, Romania
+        otp,
+        /// Phoenix, Arizona (US)
+        phx,
+        /// Querétaro, Mexico
+        qro,
+        /// Santiago, Chile
+        scl,
+        /// Seattle, Washington (US)
+        sea,
+        /// Singapore, Singapore
+        sin,
+        /// San Jose, California (US)
+        sjc,
+        /// Sydney, Australia
+        syd,
+        /// Warsaw, Poland
+        waw,
+        /// Montreal, Canada
+        yul,
+        /// Toronto, Canada
+        yyz,
+    }
+
+    enum restart-policy {
+        no,
+        always,
+        on-failure,
+    }
+
+    record machine-restart {
+        max-retries: option<u32>,
+        policy: restart-policy,
+    }
+
+    record init-config {
+        cmd: option<list<string>>,
+        entrypoint: option<list<string>>,
+        exec: option<list<string>>,
+        kernel-args: option<list<string>>,
+        swap-size-mb: option<u64>,
+        tty: option<bool>,
+    }
+
+    record stop-config {
+        signal: option<string>,
+        timeout: option<u64>,
+    }
+
+    record exec-response {
+        exit-code: option<s32>,
+        exit-signal: option<s32>,
+        stderr: option<string>,
+        stdout: option<string>,
+    }
+
+    /// Create and start a machine under `app-name` with name `machine-name` and return its ID.
+    /// If machine already exists, attributes of `machine-config` are not updated, just the machine ID is returned.
+    create: func(app-name: string, machine-name: string, machine-config: machine-config) -> result<string, string>;
+
+    update: func(app-name: string, machine-id: string, machine-config: machine-config) -> result<_, string>;
+
+    suspend: func(app-name: string, machine-id: string) -> result<_, string>;
+
+    stop: func(app-name: string, machine-id: string) -> result<_, string>;
+
+    start: func(app-name: string, machine-id: string) -> result<_, string>;
+
+    delete: func(app-name: string, machine-id: string, force: bool) -> result<_, string>;
+
+    exec: func(app-name: string, machine-id: string, command: list<string>) -> result<exec-response, string>;
+}
+
+
+world exports {
+    export app;
+    export machine;
+}
