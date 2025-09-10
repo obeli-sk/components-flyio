@@ -16,11 +16,13 @@ interface app {
 interface machine {
   use obelisk:types/execution@2.0.0.{execution-id};
   use obelisk:types/time@2.0.0.{schedule-at};
-  use activity-flyio:fly-http/machine@1.0.0-beta.{machine-state, cpu-kind, guest-config, machine-region, restart-policy, machine-restart, init-config, stop-config, machine-config, exec-response};
+  use activity-flyio:fly-http/machine@1.0.0-beta.{machine-state, host-status, cpu-kind, guest-config, machine-region, restart-policy, machine-restart, init-config, stop-config, machine-config, machine, exec-response};
 
-  create-schedule: func(schedule-at: schedule-at, app-name: string, machine-name: string, machine-config: machine-config) -> execution-id;
+  list-schedule: func(schedule-at: schedule-at, app-name: string) -> execution-id;
 
-  update-schedule: func(schedule-at: schedule-at, app-name: string, machine-id: string, machine-config: machine-config) -> execution-id;
+  create-schedule: func(schedule-at: schedule-at, app-name: string, machine-name: string, machine-config: machine-config, region: option<machine-region>) -> execution-id;
+
+  update-schedule: func(schedule-at: schedule-at, app-name: string, machine-id: string, machine-config: machine-config, region: option<machine-region>) -> execution-id;
 
   suspend-schedule: func(schedule-at: schedule-at, app-name: string, machine-id: string) -> execution-id;
 

@@ -41,6 +41,12 @@ obelisk client execution submit -f  activity-flyio:fly-http/secret@1.0.0-beta.li
 \"$FLY_APP_NAME\"
 ```
 
+List VMs:
+```sh
+obelisk client execution submit -f activity-flyio:fly-http/machine@1.0.0-beta.list -- \
+\"$FLY_APP_NAME\"
+```
+
 Launch a VM:
 ```sh
 MACHINE_ID=$(obelisk client execution submit -f --json activity-flyio:fly-http/machine@1.0.0-beta.create -- \

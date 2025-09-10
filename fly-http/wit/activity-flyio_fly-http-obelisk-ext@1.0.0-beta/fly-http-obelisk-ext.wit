@@ -26,15 +26,21 @@ interface app {
 
 interface machine {
   use obelisk:types/execution@2.0.0.{execution-id, join-set-id, await-next-extension-error, get-extension-error};
-  use activity-flyio:fly-http/machine@1.0.0-beta.{machine-state, cpu-kind, guest-config, machine-region, restart-policy, machine-restart, init-config, stop-config, machine-config, exec-response};
+  use activity-flyio:fly-http/machine@1.0.0-beta.{machine-state, host-status, cpu-kind, guest-config, machine-region, restart-policy, machine-restart, init-config, stop-config, machine-config, machine, exec-response};
 
-  create-submit: func(join-set-id: borrow<join-set-id>, app-name: string, machine-name: string, machine-config: machine-config) -> execution-id;
+  list-submit: func(join-set-id: borrow<join-set-id>, app-name: string) -> execution-id;
+
+  list-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<list<machine>, string>>, await-next-extension-error>;
+
+  list-get: func(execution-id: execution-id) -> result<result<list<machine>, string>, get-extension-error>;
+
+  create-submit: func(join-set-id: borrow<join-set-id>, app-name: string, machine-name: string, machine-config: machine-config, region: option<machine-region>) -> execution-id;
 
   create-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<string, string>>, await-next-extension-error>;
 
   create-get: func(execution-id: execution-id) -> result<result<string, string>, get-extension-error>;
 
-  update-submit: func(join-set-id: borrow<join-set-id>, app-name: string, machine-id: string, machine-config: machine-config) -> execution-id;
+  update-submit: func(join-set-id: borrow<join-set-id>, app-name: string, machine-id: string, machine-config: machine-config, region: option<machine-region>) -> execution-id;
 
   update-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<_, string>>, await-next-extension-error>;
 

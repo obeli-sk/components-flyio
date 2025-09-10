@@ -29,6 +29,7 @@
           commonDeps = with pkgs; [
               cargo-edit
               cargo-expand
+              cargo-insta
               cargo-nextest
               flyctl
               just

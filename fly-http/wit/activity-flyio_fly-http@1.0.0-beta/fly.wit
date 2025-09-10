@@ -32,6 +32,24 @@ interface machine {
         destroyed,
     }
 
+    enum host-status {
+        ok,
+        unknown,
+        unreachable,
+    }
+
+    record machine {
+        config: machine-config,
+        created-at: string,
+        updated-at: string,
+        id: string,
+        instance-id: string,
+        name: string,
+        state: string,
+        region: machine-region,
+        host-status: host-status,
+    }
+
     record machine-config {
         image: string,
         guest: option<guest-config>,
@@ -158,6 +176,8 @@ interface machine {
         stderr: option<string>,
         stdout: option<string>,
     }
+
+    %list: func(app-name: string) -> result<list<machine>, string>;
 
     /// Create and start a machine under `app-name` with name `machine-name` and return its ID.
     /// If machine already exists, attributes of `machine-config` are not updated, just the machine ID is returned.

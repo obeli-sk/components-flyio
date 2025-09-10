@@ -1,0 +1,52 @@
+---
+source: fly-http/src/machine.rs
+expression: machine
+---
+MachineSer {
+    config: MachineConfigSer {
+        image: "getobelisk/obelisk:0.24.1-ubuntu",
+        guest: Some(
+            GuestConfigSer {
+                cpu_kind: Some(
+                    Shared,
+                ),
+                cpus: Some(
+                    1,
+                ),
+                memory_mb: Some(
+                    256,
+                ),
+                kernel_args: None,
+            },
+        ),
+        auto_destroy: None,
+        init: Some(
+            InitConfigSer {
+                cmd: None,
+                entrypoint: None,
+                exec: None,
+                kernel_args: None,
+                swap_size_mb: Some(
+                    256,
+                ),
+                tty: None,
+            },
+        ),
+        env: None,
+        restart: Some(
+            MachineRestartSer {
+                max_retries: None,
+                policy: No,
+            },
+        ),
+        stop_config: None,
+    },
+    created_at: "2025-09-10T12:03:04Z",
+    updated_at: "2025-09-10T12:03:07Z",
+    id: "080155df097248",
+    instance_id: "01K4SR42ZPDHHCN70QNZKVPK48",
+    name: "machine",
+    state: "started",
+    region: MachineRegion::Ams,
+    host_status: HostStatus::Ok,
+}

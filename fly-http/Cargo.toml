@@ -12,7 +12,12 @@ crate-type = ["cdylib"]
 
 [dependencies]
 anyhow.workspace = true
+derive_more.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 wit-bindgen.workspace = true
 wstd.workspace = true
+
+[dev-dependencies]
+assert_matches.workspace = true
+insta.workspace = true

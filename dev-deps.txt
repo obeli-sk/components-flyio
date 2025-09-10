@@ -1,5 +1,6 @@
 cargo-edit-upgrade 0.13.7
 cargo-expand 1.0.115
+cargo-insta 1.43.2
 cargo-nextest 0.9.102
 just 1.42.4
 obelisk 0.24.1
