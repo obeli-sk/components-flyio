@@ -2,7 +2,7 @@
 
 cat  <<EOF
 {
-    "image": "registry.fly.io/$FLY_APP_NAME:$FLY_IMAGE_TAG",
+    "image": "$FLY_IMAGE",
     "init": {
         "swap-size-mb": 256
     },

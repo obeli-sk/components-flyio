@@ -35,13 +35,6 @@ obelisk client execution submit -f activity-flyio:fly-http/app@1.0.0-beta.create
 \"$FLY_ORG_SLUG\" \"$FLY_APP_NAME\"
 ```
 
-Push an image:
-```sh
-docker pull getobelisk/obelisk:0.24.1-ubuntu
-docker tag getobelisk/obelisk:0.24.1-ubuntu registry.fly.io/$FLY_APP_NAME:$FLY_IMAGE_TAG
-docker push registry.fly.io/$FLY_APP_NAME:$FLY_IMAGE_TAG
-```
-
 Launch a VM:
 ```sh
 MACHINE_ID=$(obelisk client execution submit -f --json activity-flyio:fly-http/machine@1.0.0-beta.create -- \
