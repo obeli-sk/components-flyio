@@ -35,13 +35,19 @@ obelisk client execution submit -f activity-flyio:fly-http/app@1.0.0-beta.create
 \"$FLY_ORG_SLUG\" \"$FLY_APP_NAME\"
 ```
 
+List secrets of the app:
+```sh
+obelisk client execution submit -f  activity-flyio:fly-http/secret@1.0.0-beta.list -- \
+\"$FLY_APP_NAME\"
+```
+
 Launch a VM:
 ```sh
 MACHINE_ID=$(obelisk client execution submit -f --json activity-flyio:fly-http/machine@1.0.0-beta.create -- \
 \"$FLY_APP_NAME\" \"$FLY_MACHINE_NAME\" "$(./scripts/fly-http-machine-config.json.sh)" | jq -r '.[-1].ok.ok')
 ```
 
-Destroy the VM:
+Delete the VM:
 ```sh
 obelisk client execution submit -f activity-flyio:fly-http/machine@1.0.0-beta.delete -- \
 \"$FLY_APP_NAME\" \"$MACHINE_ID\" true

@@ -30,7 +30,6 @@ async fn create(org_slug: String, app_name: String) -> Result<app::App, anyhow::
     let mut response = client.send(post_request).await?;
 
     if response.status().is_success() {
-        // App was created successfully.
         #[derive(Deserialize)]
         struct AppResponse {
             id: String,

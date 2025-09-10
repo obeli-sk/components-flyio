@@ -175,8 +175,27 @@ interface machine {
     exec: func(app-name: string, machine-id: string, command: list<string>) -> result<exec-response, string>;
 }
 
+/// [App Secret API](https://docs.machines.dev/#tag/secrets/get/apps/{app_name}/secrets)
+interface secret {
+
+    record secret {
+        name: string,
+        digest: string,
+    }
+
+    /// List all secrets for a given app.
+    %list: func(app-name: string) -> result<list<secret>, string>;
+
+    /// Set a secret for a given app.
+    put: func(app-name: string, secret-name: string, value: string) -> result<secret, string>;
+
+    /// Delete a secret from a given app.
+    delete: func(app-name: string, secret-name: string) -> result<_, string>;
+
+}
 
 world exports {
     export app;
     export machine;
+    export secret;
 }

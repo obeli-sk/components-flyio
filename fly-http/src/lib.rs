@@ -1,5 +1,6 @@
 mod app;
 mod machine;
+mod secret;
 
 use anyhow::Context;
 use wit_bindgen::generate;
