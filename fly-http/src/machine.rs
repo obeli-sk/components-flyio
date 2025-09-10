@@ -1,12 +1,13 @@
 use crate::exports::activity_flyio::fly_http::machine::{
     ExecResponse, Guest, MachineConfig, MachineRegion,
 };
+use crate::machine::ser::MachineRegionSer;
 use crate::{API_BASE_URL, Component, request_with_api_token};
 use anyhow::{Context, anyhow, bail, ensure};
 use ser::{
-    FlyExecResponse, FlyGuestConfig, FlyInitConfig, FlyMachineConfig, FlyMachineCreateRequest,
-    FlyMachineCreateResponse, FlyMachineRestart, FlyMachineUpdateRequest, FlyResponseError,
-    FlyStopConfig,
+    ExecResponseSer, GuestConfigSer, InitConfigSer, MachineConfigSer, MachineCreateRequestSer,
+    MachineCreateResponseSer, MachineRestartSer, MachineUpdateRequestSer, ResponseErrorSer,
+    StopConfigSer,
 };
 use wstd::http::request::JsonRequest;
 use wstd::http::{Client, IntoBody as _, Method, StatusCode};
@@ -15,60 +16,71 @@ use wstd::runtime::block_on;
 // These structs are internal implementation details. They are designed to serialize
 // into the exact JSON format expected by the Fly.io Machines API.
 pub(crate) mod ser {
-    use crate::exports::activity_flyio::fly_http::machine::{CpuKind, ExecResponse, RestartPolicy};
+    use crate::exports::activity_flyio::fly_http::machine::{
+        CpuKind, ExecResponse, GuestConfig, InitConfig, MachineConfig, MachineRegion,
+        MachineRestart, RestartPolicy, StopConfig,
+    };
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
 
     #[derive(Serialize, Debug)]
-    pub(crate) struct FlyMachineCreateRequest {
+    pub(crate) struct MachineCreateRequestSer {
         pub(crate) name: String,
-        pub(crate) config: FlyMachineConfig,
-        pub(crate) region: Option<String>,
+        pub(crate) config: MachineConfigSer,
+        pub(crate) region: Option<MachineRegionSer>,
     }
 
     #[derive(Serialize, Debug)]
-    pub(crate) struct FlyMachineUpdateRequest {
-        pub(crate) config: FlyMachineConfig,
-        pub(crate) region: Option<String>,
+    pub(crate) struct MachineUpdateRequestSer {
+        pub(crate) config: MachineConfigSer,
+        pub(crate) region: Option<MachineRegionSer>,
     }
 
-    #[derive(Serialize, Debug)]
-    pub(crate) struct FlyMachineConfig {
+    #[derive(Serialize, Deserialize, Debug)]
+    pub(crate) struct MachineConfigSer {
         pub(crate) image: String,
-        pub(crate) guest: Option<FlyGuestConfig>,
+        pub(crate) guest: Option<GuestConfigSer>,
         pub(crate) auto_destroy: Option<bool>,
-        pub(crate) init: Option<FlyInitConfig>,
+        pub(crate) init: Option<InitConfigSer>,
         pub(crate) env: Option<HashMap<String, String>>,
-        pub(crate) restart: Option<FlyMachineRestart>,
-        pub(crate) stop_config: Option<FlyStopConfig>,
+        pub(crate) restart: Option<MachineRestartSer>,
+        pub(crate) stop_config: Option<StopConfigSer>,
     }
 
-    #[derive(Serialize, Debug)]
-    pub(crate) struct FlyGuestConfig {
-        pub(crate) cpu_kind: Option<FlyCpuKind>,
+    #[derive(Serialize, Deserialize, Debug)]
+    pub(crate) struct GuestConfigSer {
+        pub(crate) cpu_kind: Option<CpuKindSer>,
         pub(crate) cpus: Option<u64>,
         pub(crate) memory_mb: Option<u64>,
         pub(crate) kernel_args: Option<Vec<String>>,
     }
 
-    #[derive(Serialize, Debug)]
+    #[derive(Serialize, Deserialize, Debug)]
     #[serde(rename_all = "kebab-case")]
-    pub(crate) enum FlyCpuKind {
+    pub(crate) enum CpuKindSer {
         Shared,
         Performance,
     }
 
-    impl From<CpuKind> for FlyCpuKind {
+    impl From<CpuKind> for CpuKindSer {
         fn from(value: CpuKind) -> Self {
             match value {
-                CpuKind::Performance => FlyCpuKind::Performance,
-                CpuKind::Shared => FlyCpuKind::Shared,
+                CpuKind::Performance => CpuKindSer::Performance,
+                CpuKind::Shared => CpuKindSer::Shared,
+            }
+        }
+    }
+    impl From<CpuKindSer> for CpuKind {
+        fn from(value: CpuKindSer) -> CpuKind {
+            match value {
+                CpuKindSer::Performance => CpuKind::Performance,
+                CpuKindSer::Shared => CpuKind::Shared,
             }
         }
     }
 
-    #[derive(Serialize, Debug)]
-    pub(crate) struct FlyInitConfig {
+    #[derive(Serialize, Deserialize, Debug)]
+    pub(crate) struct InitConfigSer {
         pub(crate) cmd: Option<Vec<String>>,
         pub(crate) entrypoint: Option<Vec<String>>,
         pub(crate) exec: Option<Vec<String>>,
@@ -77,22 +89,22 @@ pub(crate) mod ser {
         pub(crate) tty: Option<bool>,
     }
 
-    #[derive(Serialize, Debug)]
-    pub(crate) struct FlyMachineRestart {
+    #[derive(Serialize, Deserialize, Debug)]
+    pub(crate) struct MachineRestartSer {
         pub(crate) max_retries: Option<u32>,
-        pub(crate) policy: FlyRestartPolicy,
+        pub(crate) policy: RestartPolicySer,
     }
 
-    #[derive(Serialize, Debug)]
+    #[derive(Serialize, Deserialize, Debug)]
     #[serde(rename_all = "kebab-case")]
-    pub(crate) enum FlyRestartPolicy {
+    pub(crate) enum RestartPolicySer {
         No,
         Always,
         // must be serialized as `on-failure`
         OnFailure,
     }
-    impl From<RestartPolicy> for FlyRestartPolicy {
-        fn from(value: RestartPolicy) -> Self {
+    impl From<RestartPolicy> for RestartPolicySer {
+        fn from(value: RestartPolicy) -> RestartPolicySer {
             match value {
                 RestartPolicy::No => Self::No,
                 RestartPolicy::Always => Self::Always,
@@ -100,24 +112,33 @@ pub(crate) mod ser {
             }
         }
     }
+    impl From<RestartPolicySer> for RestartPolicy {
+        fn from(value: RestartPolicySer) -> RestartPolicy {
+            match value {
+                RestartPolicySer::No => RestartPolicy::No,
+                RestartPolicySer::Always => RestartPolicy::Always,
+                RestartPolicySer::OnFailure => RestartPolicy::OnFailure,
+            }
+        }
+    }
 
-    #[derive(Serialize, Debug)]
-    pub(crate) struct FlyStopConfig {
+    #[derive(Serialize, Deserialize, Debug)]
+    pub(crate) struct StopConfigSer {
         pub(crate) signal: Option<String>,
         pub(crate) timeout: Option<u64>,
     }
 
     #[derive(Deserialize)]
-    pub(crate) struct FlyMachineCreateResponse {
+    pub(crate) struct MachineCreateResponseSer {
         pub(crate) id: String,
     }
 
     #[derive(Deserialize, Debug)]
-    pub(crate) struct FlyResponseError {
+    pub(crate) struct ResponseErrorSer {
         error: String,
     }
 
-    impl FlyResponseError {
+    impl ResponseErrorSer {
         pub(crate) fn get_machine_id_on_creation_conflict(&self) -> Option<&str> {
             const PREFIX: &str = "already_exists: unique machine name violation, machine ID ";
             const SUFFIX: &str = " already exists with name ";
@@ -132,14 +153,14 @@ pub(crate) mod ser {
     }
 
     #[derive(Debug, Deserialize)]
-    pub(crate) struct FlyExecResponse {
+    pub(crate) struct ExecResponseSer {
         exit_code: Option<i32>,
         exit_signal: Option<i32>,
         stderr: Option<String>,
         stdout: Option<String>,
     }
-    impl From<FlyExecResponse> for ExecResponse {
-        fn from(value: FlyExecResponse) -> Self {
+    impl From<ExecResponseSer> for ExecResponse {
+        fn from(value: ExecResponseSer) -> Self {
             ExecResponse {
                 exit_code: value.exit_code,
                 exit_signal: value.exit_signal,
@@ -148,24 +169,133 @@ pub(crate) mod ser {
             }
         }
     }
+
+    #[derive(Serialize, Debug)]
+    pub(crate) struct MachineRegionSer(String);
+
+    impl From<MachineRegion> for MachineRegionSer {
+        fn from(region: MachineRegion) -> MachineRegionSer {
+            MachineRegionSer(serde_json::to_string(&region).unwrap().to_lowercase())
+        }
+    }
+    impl From<MachineRegionSer> for MachineRegion {
+        fn from(region: MachineRegionSer) -> MachineRegion {
+            let capitalized = region.0.to_uppercase();
+            serde_json::from_str(&capitalized).unwrap()
+        }
+    }
+
+    impl From<MachineConfig> for MachineConfigSer {
+        fn from(wit: MachineConfig) -> MachineConfigSer {
+            // Copy the list of environment variable tuples.
+            let env = wit.env.map(|vec| vec.into_iter().collect());
+
+            // Transform the guest config.
+            let guest = wit.guest.map(|g| GuestConfigSer {
+                cpu_kind: g.cpu_kind.map(|cpu_kind| cpu_kind.into()),
+                cpus: g.cpus,
+                memory_mb: g.memory_mb,
+                kernel_args: g.kernel_args,
+            });
+
+            // Transform the restart policy.
+            let restart = wit.restart.map(|r| MachineRestartSer {
+                max_retries: r.max_retries,
+                policy: r.policy.into(),
+            });
+
+            // Transform the init config.
+            let init = wit.init.map(|i| InitConfigSer {
+                cmd: i.cmd,
+                entrypoint: i.entrypoint,
+                exec: i.exec,
+                kernel_args: i.kernel_args,
+                swap_size_mb: i.swap_size_mb,
+                tty: i.tty,
+            });
+
+            // Transform the stop config.
+            let stop_config = wit.stop_config.map(|s| StopConfigSer {
+                signal: s.signal,
+                timeout: s.timeout,
+            });
+
+            MachineConfigSer {
+                image: wit.image,
+                auto_destroy: wit.auto_destroy,
+                env,
+                guest,
+                restart,
+                init,
+                stop_config,
+            }
+        }
+    }
+
+    impl From<MachineConfigSer> for MachineConfig {
+        fn from(ser: MachineConfigSer) -> MachineConfig {
+            // Revert the environment variable tuple list back to a Vec<Option<(String, String)>>.
+            let env = ser.env.map(|vec| vec.into_iter().collect());
+
+            // Revert the guest config.
+            let guest = ser.guest.map(|g| GuestConfig {
+                cpu_kind: g.cpu_kind.map(|cpu_kind| cpu_kind.into()),
+                cpus: g.cpus,
+                memory_mb: g.memory_mb,
+                kernel_args: g.kernel_args,
+            });
+
+            // Revert the restart policy.
+            let restart = ser.restart.map(|r| MachineRestart {
+                max_retries: r.max_retries,
+                policy: r.policy.into(),
+            });
+
+            // Revert the init config.
+            let init = ser.init.map(|i| InitConfig {
+                cmd: i.cmd,
+                entrypoint: i.entrypoint,
+                exec: i.exec,
+                kernel_args: i.kernel_args,
+                swap_size_mb: i.swap_size_mb,
+                tty: i.tty,
+            });
+
+            // Revert the stop config.
+            let stop_config = ser.stop_config.map(|s| StopConfig {
+                signal: s.signal,
+                timeout: s.timeout,
+            });
+
+            MachineConfig {
+                image: ser.image,
+                auto_destroy: ser.auto_destroy,
+                env,
+                guest,
+                restart,
+                init,
+                stop_config,
+            }
+        }
+    }
+}
 }
 
 async fn create(
     app_name: String,
     machine_name: String,
     machine_config: MachineConfig,
+    region: Option<MachineRegion>,
 ) -> Result<String, anyhow::Error> {
     {
-        let region = machine_config.region.map(transform_region);
-        let fly_config = transform_config(machine_config);
-        let request_payload = FlyMachineCreateRequest {
+        let region = region.map(MachineRegionSer::from);
+        let fly_config = MachineConfigSer::from(machine_config);
+        let request_payload = MachineCreateRequestSer {
             name: machine_name,
             config: fly_config,
             region,
         };
         let body = serde_json::to_string(&request_payload).expect("must be serializable");
-
-        println!("Sending {body}");
 
         let url = format!("{API_BASE_URL}/apps/{app_name}/machines");
         let request = request_with_api_token()?
@@ -177,7 +307,7 @@ async fn create(
         let response = Client::new().send(request).await?;
         if response.status().is_success() {
             let body = response.into_body().bytes().await?;
-            let resp: FlyMachineCreateResponse =
+            let resp: MachineCreateResponseSer =
                 serde_json::from_slice(&body).with_context(|| {
                     format!(
                         "Deserialization of response failed: `{}`",
@@ -190,7 +320,7 @@ async fn create(
         let error_body = response.into_body().bytes().await?;
         eprintln!("Got error status {error_status}");
         if error_status == StatusCode::CONFLICT {
-            let error: FlyResponseError =
+            let error: ResponseErrorSer =
                 serde_json::from_slice(&error_body).with_context(|| {
                     format!(
                         "cannot parse error response: `{}`",
@@ -214,17 +344,16 @@ async fn update(
     app_name: String,
     machine_id: String,
     machine_config: MachineConfig,
+    region: Option<MachineRegion>,
 ) -> Result<(), anyhow::Error> {
     {
-        let region = machine_config.region.map(transform_region);
-        let fly_config = transform_config(machine_config);
-        let request_payload = FlyMachineUpdateRequest {
-            config: fly_config,
+        let region = region.map(MachineRegionSer::from);
+        let machine_config = MachineConfigSer::from(machine_config);
+        let request_payload = MachineUpdateRequestSer {
+            config: machine_config,
             region,
         };
         let body = serde_json::to_string(&request_payload).expect("must be serializable");
-
-        println!("Sending {body}");
 
         let url = format!("{API_BASE_URL}/apps/{app_name}/machines/{machine_id}");
         let request = request_with_api_token()?
@@ -236,7 +365,7 @@ async fn update(
         let response = Client::new().send(request).await?;
         if response.status().is_success() {
             let body = response.into_body().bytes().await?;
-            let resp: FlyMachineCreateResponse =
+            let resp: MachineCreateResponseSer =
                 serde_json::from_slice(&body).with_context(|| {
                     format!(
                         "Deserialization of response failed: `{}`",
@@ -272,7 +401,7 @@ async fn exec(
     let response = Client::new().send(request).await?;
     if response.status().is_success() {
         let response = response.into_body().bytes().await?;
-        let response: FlyExecResponse = serde_json::from_slice(&response).inspect_err(|_| {
+        let response: ExecResponseSer = serde_json::from_slice(&response).inspect_err(|_| {
             eprintln!("cannot deserialize: {}", String::from_utf8_lossy(&response))
         })?;
         Ok(response.into())
@@ -323,16 +452,20 @@ impl Guest for Component {
         app_name: String,
         machine_name: String,
         machine_config: MachineConfig,
+        region: Option<MachineRegion>,
     ) -> Result<String, String> {
-        block_on(create(app_name, machine_name, machine_config)).map_err(|err| err.to_string())
+        block_on(create(app_name, machine_name, machine_config, region))
+            .map_err(|err| err.to_string())
     }
 
     fn update(
         app_name: String,
         machine_id: String,
         machine_config: MachineConfig,
+        region: Option<MachineRegion>,
     ) -> Result<(), String> {
-        block_on(update(app_name, machine_id, machine_config)).map_err(|err| err.to_string())
+        block_on(update(app_name, machine_id, machine_config, region))
+            .map_err(|err| err.to_string())
     }
 
     fn stop(app_name: String, machine_id: String) -> Result<(), String> {
@@ -361,63 +494,9 @@ impl Guest for Component {
     }
 }
 
-fn transform_region(region: MachineRegion) -> String {
-    format!("{region:?}")
-        .strip_prefix("MachineRegion::")
-        .expect("must start with `MachineRegion::`")
-        .to_lowercase()
-}
-
-/// A helper function to transform the WIT-generated MachineConfig struct into a
-/// serializable FlyMachineConfig struct that matches the Fly.io API.
-fn transform_config(wit: MachineConfig) -> FlyMachineConfig {
-    // Copy the list of environment variable tuples.
-    let env = wit.env.map(|vec| vec.into_iter().collect());
-
-    // Transform the guest config.
-    let guest = wit.guest.map(|g| FlyGuestConfig {
-        cpu_kind: g.cpu_kind.map(|cpu_kind| cpu_kind.into()),
-        cpus: g.cpus,
-        memory_mb: g.memory_mb,
-        kernel_args: g.kernel_args,
-    });
-
-    // Transform the restart policy.
-    let restart = wit.restart.map(|r| FlyMachineRestart {
-        max_retries: r.max_retries,
-        policy: r.policy.into(),
-    });
-
-    // Transform the init config.
-    let init = wit.init.map(|i| FlyInitConfig {
-        cmd: i.cmd,
-        entrypoint: i.entrypoint,
-        exec: i.exec,
-        kernel_args: i.kernel_args,
-        swap_size_mb: i.swap_size_mb,
-        tty: i.tty,
-    });
-
-    // Transform the stop config.
-    let stop_config = wit.stop_config.map(|s| FlyStopConfig {
-        signal: s.signal,
-        timeout: s.timeout,
-    });
-
-    FlyMachineConfig {
-        image: wit.image,
-        auto_destroy: wit.auto_destroy,
-        env,
-        guest,
-        restart,
-        init,
-        stop_config,
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{ser::FlyResponseError, transform_region};
+    use super::{ser::ResponseErrorSer, transform_region};
     use crate::exports::activity_flyio::fly_http::machine::MachineRegion;
     use serde_json::json;
 
@@ -429,7 +508,7 @@ mod tests {
     #[test]
     fn get_machine_id_on_creation_conflict_should_work() {
         let response = json!({"error": "already_exists: unique machine name violation, machine ID 32876249a30918 already exists with name \"foo\""});
-        let response: FlyResponseError = serde_json::from_value(response).unwrap();
+        let response: ResponseErrorSer = serde_json::from_value(response).unwrap();
         let id = response.get_machine_id_on_creation_conflict().unwrap();
         assert_eq!("32876249a30918", id);
     }

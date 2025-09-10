@@ -13,7 +13,6 @@ cat  <<EOF
     },
     "restart": {
         "policy": "no"
-    },
-    "region": "ams"
+    }
 }
 EOF

@@ -44,7 +44,8 @@ obelisk client execution submit -f  activity-flyio:fly-http/secret@1.0.0-beta.li
 Launch a VM:
 ```sh
 MACHINE_ID=$(obelisk client execution submit -f --json activity-flyio:fly-http/machine@1.0.0-beta.create -- \
-\"$FLY_APP_NAME\" \"$FLY_MACHINE_NAME\" "$(./scripts/fly-http-machine-config.json.sh)" | jq -r '.[-1].ok.ok')
+\"$FLY_APP_NAME\" \"$FLY_MACHINE_NAME\" "$(./scripts/fly-http-machine-config.json.sh)" \"$FLY_REGION\" \
+| jq -r '.[-1].ok.ok')
 ```
 
 Delete the VM:

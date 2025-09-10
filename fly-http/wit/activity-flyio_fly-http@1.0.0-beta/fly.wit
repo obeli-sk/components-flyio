@@ -1,5 +1,6 @@
 package activity-flyio:fly-http@1.0.0-beta;
 
+/// [App API](https://docs.machines.dev/#tag/apps/get/apps)
 interface app {
 
     record app {
@@ -14,6 +15,7 @@ interface app {
     delete: func(app-name: string, force: bool) -> result<_, string>;
 }
 
+/// [Machine API](https://docs.machines.dev/#tag/machines/get/apps/{app_name}/machines)
 interface machine {
 
     enum machine-state {
@@ -32,7 +34,6 @@ interface machine {
 
     record machine-config {
         image: string,
-        region: option<machine-region>,
         guest: option<guest-config>,
         auto-destroy: option<bool>,
         init: option<init-config>,
@@ -160,9 +161,9 @@ interface machine {
 
     /// Create and start a machine under `app-name` with name `machine-name` and return its ID.
     /// If machine already exists, attributes of `machine-config` are not updated, just the machine ID is returned.
-    create: func(app-name: string, machine-name: string, machine-config: machine-config) -> result<string, string>;
+    create: func(app-name: string, machine-name: string, machine-config: machine-config, region: option<machine-region>) -> result<string, string>;
 
-    update: func(app-name: string, machine-id: string, machine-config: machine-config) -> result<_, string>;
+    update: func(app-name: string, machine-id: string, machine-config: machine-config, region: option<machine-region>) -> result<_, string>;
 
     suspend: func(app-name: string, machine-id: string) -> result<_, string>;
 
