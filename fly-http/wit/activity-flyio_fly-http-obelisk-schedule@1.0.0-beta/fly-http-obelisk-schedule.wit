@@ -6,7 +6,7 @@ interface app {
   use obelisk:types/time@2.0.0.{schedule-at};
   use activity-flyio:fly-http/app@1.0.0-beta.{app};
 
-  create-schedule: func(schedule-at: schedule-at, org-slug: string, app-name: string) -> execution-id;
+  put-schedule: func(schedule-at: schedule-at, org-slug: string, app-name: string) -> execution-id;
 
   list-schedule: func(schedule-at: schedule-at, org-slug: string) -> execution-id;
 
@@ -31,5 +31,17 @@ interface machine {
   delete-schedule: func(schedule-at: schedule-at, app-name: string, machine-id: string, force: bool) -> execution-id;
 
   exec-schedule: func(schedule-at: schedule-at, app-name: string, machine-id: string, command: list<string>) -> execution-id;
+}
+
+interface secret {
+  use obelisk:types/execution@2.0.0.{execution-id};
+  use obelisk:types/time@2.0.0.{schedule-at};
+  use activity-flyio:fly-http/secret@1.0.0-beta.{secret};
+
+  list-schedule: func(schedule-at: schedule-at, app-name: string) -> execution-id;
+
+  put-schedule: func(schedule-at: schedule-at, app-name: string, secret-name: string, value: string) -> execution-id;
+
+  delete-schedule: func(schedule-at: schedule-at, app-name: string, secret-name: string) -> execution-id;
 }
 

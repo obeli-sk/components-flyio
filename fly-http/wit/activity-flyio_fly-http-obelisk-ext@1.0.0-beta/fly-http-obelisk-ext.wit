@@ -5,11 +5,11 @@ interface app {
   use obelisk:types/execution@2.0.0.{execution-id, join-set-id, await-next-extension-error, get-extension-error};
   use activity-flyio:fly-http/app@1.0.0-beta.{app};
 
-  create-submit: func(join-set-id: borrow<join-set-id>, org-slug: string, app-name: string) -> execution-id;
+  put-submit: func(join-set-id: borrow<join-set-id>, org-slug: string, app-name: string) -> execution-id;
 
-  create-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<app, string>>, await-next-extension-error>;
+  put-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<app, string>>, await-next-extension-error>;
 
-  create-get: func(execution-id: execution-id) -> result<result<app, string>, get-extension-error>;
+  put-get: func(execution-id: execution-id) -> result<result<app, string>, get-extension-error>;
 
   list-submit: func(join-set-id: borrow<join-set-id>, org-slug: string) -> execution-id;
 
@@ -69,5 +69,28 @@ interface machine {
   exec-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<exec-response, string>>, await-next-extension-error>;
 
   exec-get: func(execution-id: execution-id) -> result<result<exec-response, string>, get-extension-error>;
+}
+
+interface secret {
+  use obelisk:types/execution@2.0.0.{execution-id, join-set-id, await-next-extension-error, get-extension-error};
+  use activity-flyio:fly-http/secret@1.0.0-beta.{secret};
+
+  list-submit: func(join-set-id: borrow<join-set-id>, app-name: string) -> execution-id;
+
+  list-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<list<secret>, string>>, await-next-extension-error>;
+
+  list-get: func(execution-id: execution-id) -> result<result<list<secret>, string>, get-extension-error>;
+
+  put-submit: func(join-set-id: borrow<join-set-id>, app-name: string, secret-name: string, value: string) -> execution-id;
+
+  put-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<secret, string>>, await-next-extension-error>;
+
+  put-get: func(execution-id: execution-id) -> result<result<secret, string>, get-extension-error>;
+
+  delete-submit: func(join-set-id: borrow<join-set-id>, app-name: string, secret-name: string) -> execution-id;
+
+  delete-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<_, string>>, await-next-extension-error>;
+
+  delete-get: func(execution-id: execution-id) -> result<result<_, string>, get-extension-error>;
 }
 
