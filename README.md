@@ -31,7 +31,7 @@ obelisk client execution submit -f activity-flyio:fly-http/app@1.0.0-beta.list -
 
 Create an app:
 ```sh
-obelisk client execution submit -f activity-flyio:fly-http/app@1.0.0-beta.create -- \
+obelisk client execution submit -f activity-flyio:fly-http/app@1.0.0-beta.put -- \
 \"$FLY_ORG_SLUG\" \"$FLY_APP_NAME\"
 ```
 

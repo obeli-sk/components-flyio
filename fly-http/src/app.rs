@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use wstd::http::{Client, IntoBody as _, Method, StatusCode};
 use wstd::runtime::block_on;
 
-async fn create(org_slug: String, app_name: String) -> Result<app::App, anyhow::Error> {
+async fn put(org_slug: String, app_name: String) -> Result<app::App, anyhow::Error> {
     let client = Client::new();
 
     // Attempt to create the app
@@ -147,8 +147,8 @@ impl app::Guest for crate::Component {
     /// Idempotently create a new fly.io app.
     /// If the app creation fails, check if the app already exists in the correct
     /// organization, otherwise return with an error.
-    fn create(org_slug: String, app_name: String) -> Result<app::App, String> {
-        block_on(create(org_slug, app_name)).map_err(|err| err.to_string())
+    fn put(org_slug: String, app_name: String) -> Result<app::App, String> {
+        block_on(put(org_slug, app_name)).map_err(|err| err.to_string())
     }
 
     /// List all fly.io apps in an organization.

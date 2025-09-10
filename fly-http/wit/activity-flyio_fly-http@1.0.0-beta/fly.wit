@@ -9,7 +9,7 @@ interface app {
 
     /// Idempotently create a new fly.io app.
     /// Using "personal" alias for org-slug works but will return an error on retry: "already exists but belongs to different organization"
-    create: func(org-slug: string, app-name: string) -> result<app, string>;
+    put: func(org-slug: string, app-name: string) -> result<app, string>;
     %list: func(org-slug: string) -> result<list<app>, string>;
     delete: func(app-name: string, force: bool) -> result<_, string>;
 }
