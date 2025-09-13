@@ -20,7 +20,7 @@ pub(crate) mod ser {
     use crate::activity_flyio::fly_http::regions::Region;
     use crate::exports::activity_flyio::fly_http::machines::{
         CpuKind, ExecResponse, GuestConfig, HostStatus, InitConfig, Machine, MachineConfig,
-        MachineRestart, RestartPolicy, StopConfig,
+        MachineRestart, Mount, RestartPolicy, StopConfig,
     };
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
@@ -77,6 +77,7 @@ pub(crate) mod ser {
         env: Option<HashMap<String, String>>,
         restart: Option<MachineRestartSer>,
         stop_config: Option<StopConfigSer>,
+        mounts: Option<Vec<Mount>>,
     }
 
     #[derive(Serialize, Deserialize, Debug)]
@@ -158,6 +159,12 @@ pub(crate) mod ser {
     pub(crate) struct StopConfigSer {
         signal: Option<String>,
         timeout: Option<u64>,
+    }
+
+    #[derive(Serialize, Deserialize, Debug)]
+    pub(crate) struct MountSer {
+        volume: String,
+        path: String,
     }
 
     #[derive(Deserialize)]
@@ -306,6 +313,7 @@ pub(crate) mod ser {
                 restart,
                 init,
                 stop_config,
+                mounts: wit.mounts,
             }
         }
     }
@@ -353,6 +361,7 @@ pub(crate) mod ser {
                 restart,
                 init,
                 stop_config,
+                mounts: ser.mounts,
             }
         }
     }

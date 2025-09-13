@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cat  <<EOF
+cat <<EOF
 {
     "image": "$FLY_IMAGE",
     "init": {
@@ -13,6 +13,14 @@ cat  <<EOF
     },
     "restart": {
         "policy": "no"
-    }
+    }$(if [ -n "$VOLUME_ID" ]; then
+        echo ',
+    "mounts": [
+        {
+            "volume": "'"$VOLUME_ID"'",
+            "path": "/opt"
+        }
+    ]'
+    fi)
 }
 EOF

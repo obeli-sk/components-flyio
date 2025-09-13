@@ -59,6 +59,12 @@ interface machines {
         env: option<list<tuple<string, string>>>,
         restart: option<machine-restart>,
         stop-config: option<stop-config>,
+        mounts: option<list<mount>>,
+    }
+
+    record mount {
+        volume: string,
+        path: string,
     }
 
     record guest-config {

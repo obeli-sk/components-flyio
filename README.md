@@ -63,7 +63,7 @@ VOLUME_ID=$(obelisk client execution submit -f --json activity-flyio:fly-http/vo
     }' | jq -r '.[-1].ok.ok.id')
 ```
 
-Destroy the volume:
+Delete the volume:
 ```sh
 obelisk client execution submit -f activity-flyio:fly-http/volumes@1.0.0-beta.delete -- \
 \"$FLY_APP_NAME\" \"$VOLUME_ID\"
