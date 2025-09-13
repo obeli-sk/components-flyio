@@ -594,6 +594,10 @@ impl Guest for Component {
         block_on(change_machine(&app_name, &machine_id, "start")).map_err(|err| err.to_string())
     }
 
+    fn restart(app_name: String, machine_id: String) -> Result<(), String> {
+        block_on(change_machine(&app_name, &machine_id, "restart")).map_err(|err| err.to_string())
+    }
+
     fn delete(app_name: String, machine_id: String, force: bool) -> Result<(), String> {
         let url = format!("{API_BASE_URL}/apps/{app_name}/machines/{machine_id}?force={force}");
         block_on(send_request(&url, Method::DELETE)).map_err(|err| err.to_string())

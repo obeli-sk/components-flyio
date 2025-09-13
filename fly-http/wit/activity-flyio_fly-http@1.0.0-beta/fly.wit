@@ -125,6 +125,8 @@ interface machines {
 
     start: func(app-name: string, machine-id: string) -> result<_, string>;
 
+    restart: func(app-name: string, machine-id: string) -> result<_, string>;
+
     delete: func(app-name: string, machine-id: string, force: bool) -> result<_, string>;
 
     exec: func(app-name: string, machine-id: string, command: list<string>) -> result<exec-response, string>;
