@@ -1,6 +1,8 @@
+use crate::activity_flyio::fly_http::regions::Region;
 use crate::exports::activity_flyio::fly_http::machines::{
-    ExecResponse, Guest, Machine, MachineConfig, MachineRegion,
+    ExecResponse, Guest, Machine, MachineConfig,
 };
+
 use crate::machine::ser::{MachineSer, ToLowerWrapper};
 use crate::{API_BASE_URL, Component, request_with_api_token};
 use anyhow::{Context, anyhow, bail, ensure};
@@ -15,9 +17,10 @@ use wstd::runtime::block_on;
 // These structs are internal implementation details. They are designed to serialize
 // into the exact JSON format expected by the Fly.io Machines API.
 pub(crate) mod ser {
+    use crate::activity_flyio::fly_http::regions::Region;
     use crate::exports::activity_flyio::fly_http::machines::{
         CpuKind, ExecResponse, GuestConfig, HostStatus, InitConfig, Machine, MachineConfig,
-        MachineRegion, MachineRestart, RestartPolicy, StopConfig,
+        MachineRestart, RestartPolicy, StopConfig,
     };
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
@@ -28,13 +31,13 @@ pub(crate) mod ser {
     pub(crate) struct MachineCreateRequestSer {
         pub(crate) name: String,
         pub(crate) config: MachineConfigSer,
-        pub(crate) region: Option<ToLowerWrapper<MachineRegion>>,
+        pub(crate) region: Option<ToLowerWrapper<Region>>,
     }
 
     #[derive(Serialize, Debug)]
     pub(crate) struct MachineUpdateRequestSer {
         pub(crate) config: MachineConfigSer,
-        pub(crate) region: Option<ToLowerWrapper<MachineRegion>>,
+        pub(crate) region: Option<ToLowerWrapper<Region>>,
     }
 
     #[derive(Deserialize, Debug)]
@@ -46,7 +49,7 @@ pub(crate) mod ser {
         instance_id: String,
         name: String,
         state: String,
-        region: ToLowerWrapper<MachineRegion>,
+        region: ToLowerWrapper<Region>,
         host_status: ToLowerWrapper<HostStatus>,
     }
     impl From<MachineSer> for Machine {
@@ -226,19 +229,17 @@ pub(crate) mod ser {
         where
             D: serde::Deserializer<'de>,
         {
-            deserializer.deserialize_string(MachineRegionVisitor {
+            deserializer.deserialize_string(RegionVisitor {
                 _phantom_data: Default::default(),
             })
         }
     }
 
-    struct MachineRegionVisitor<T: Debug + Serialize + DeserializeOwned> {
+    struct RegionVisitor<T: Debug + Serialize + DeserializeOwned> {
         _phantom_data: std::marker::PhantomData<T>,
     }
 
-    impl<'de, T: Debug + Serialize + DeserializeOwned> serde::de::Visitor<'de>
-        for MachineRegionVisitor<T>
-    {
+    impl<'de, T: Debug + Serialize + DeserializeOwned> serde::de::Visitor<'de> for RegionVisitor<T> {
         type Value = ToLowerWrapper<T>;
 
         fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -385,7 +386,7 @@ async fn create(
     app_name: String,
     machine_name: String,
     machine_config: MachineConfig,
-    region: Option<MachineRegion>,
+    region: Option<Region>,
 ) -> Result<String, anyhow::Error> {
     {
         let region = region.map(ToLowerWrapper);
@@ -444,7 +445,7 @@ async fn update(
     app_name: String,
     machine_id: String,
     machine_config: MachineConfig,
-    region: Option<MachineRegion>,
+    region: Option<Region>,
 ) -> Result<(), anyhow::Error> {
     {
         let region = region.map(ToLowerWrapper);
@@ -556,7 +557,7 @@ impl Guest for Component {
         app_name: String,
         machine_name: String,
         machine_config: MachineConfig,
-        region: Option<MachineRegion>,
+        region: Option<Region>,
     ) -> Result<String, String> {
         block_on(create(app_name, machine_name, machine_config, region))
             .map_err(|err| err.to_string())
@@ -566,7 +567,7 @@ impl Guest for Component {
         app_name: String,
         machine_id: String,
         machine_config: MachineConfig,
-        region: Option<MachineRegion>,
+        region: Option<Region>,
     ) -> Result<(), String> {
         block_on(update(app_name, machine_id, machine_config, region))
             .map_err(|err| err.to_string())
@@ -602,7 +603,7 @@ impl Guest for Component {
 mod tests {
     use super::ser::ResponseErrorSer;
     use crate::{
-        exports::activity_flyio::fly_http::machines::MachineRegion,
+        exports::activity_flyio::fly_http::machines::Region,
         machine::ser::{MachineSer, ToLowerWrapper},
     };
     use insta::assert_debug_snapshot;
@@ -612,7 +613,7 @@ mod tests {
     fn region_ser() {
         assert_eq!(
             "\"ams\"",
-            serde_json::to_string(&ToLowerWrapper(MachineRegion::Ams)).unwrap()
+            serde_json::to_string(&ToLowerWrapper(Region::Ams)).unwrap()
         );
     }
 
@@ -620,7 +621,7 @@ mod tests {
     fn region_de() {
         assert_matches::assert_matches!(
             serde_json::from_str("\"ams\"").unwrap(),
-            ToLowerWrapper(MachineRegion::Ams)
+            ToLowerWrapper(Region::Ams)
         );
     }
 

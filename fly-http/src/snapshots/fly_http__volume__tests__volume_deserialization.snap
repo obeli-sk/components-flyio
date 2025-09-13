@@ -6,7 +6,7 @@ VolumeSer {
     id: "vol_vjeylkgg6gll7j94",
     name: "my_app_vol",
     state: "created",
-    region: MachineRegion::Ams,
+    region: Region::Ams,
     size_gb: 1,
     encrypted: true,
     attached_machine_id: None,

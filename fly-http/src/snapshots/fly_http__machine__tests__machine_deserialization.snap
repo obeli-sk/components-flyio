@@ -47,6 +47,6 @@ MachineSer {
     instance_id: "01K4SR42ZPDHHCN70QNZKVPK48",
     name: "machine",
     state: "started",
-    region: MachineRegion::Ams,
+    region: Region::Ams,
     host_status: HostStatus::Ok,
 }

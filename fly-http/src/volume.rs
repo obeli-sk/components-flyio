@@ -10,15 +10,18 @@ use wstd::runtime::block_on;
 // These structs are internal implementation details. They are designed to serialize
 // into the exact JSON format expected by the Fly.io Volumes API.
 pub(crate) mod ser {
-    use crate::exports::activity_flyio::fly_http::{machines::MachineRegion, volumes::Volume};
     use crate::machine::ser::ToLowerWrapper;
+    use crate::{
+        activity_flyio::fly_http::regions::Region,
+        exports::activity_flyio::fly_http::volumes::Volume,
+    };
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize, Debug)]
     pub(crate) struct VolumeCreateRequestSer {
         pub(crate) name: String,
         pub(crate) size_gb: u32,
-        pub(crate) region: ToLowerWrapper<MachineRegion>,
+        pub(crate) region: ToLowerWrapper<Region>,
         #[serde(rename = "require_unique_zone")]
         pub(crate) require_unique_zone: Option<bool>,
     }
@@ -28,7 +31,7 @@ pub(crate) mod ser {
         pub(crate) id: String,
         pub(crate) name: String,
         pub(crate) state: String,
-        pub(crate) region: ToLowerWrapper<MachineRegion>,
+        pub(crate) region: ToLowerWrapper<Region>,
         pub(crate) size_gb: u32,
         pub(crate) encrypted: bool,
         pub(crate) attached_machine_id: Option<String>,

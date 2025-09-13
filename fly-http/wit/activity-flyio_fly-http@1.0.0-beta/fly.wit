@@ -17,6 +17,7 @@ interface apps {
 
 /// [Machines API](https://docs.machines.dev/#tag/machines/get/apps/{app_name}/machines)
 interface machines {
+    use regions.{region};
 
     enum machine-state {
         created,
@@ -46,7 +47,7 @@ interface machines {
         instance-id: string,
         name: string,
         state: string,
-        region: machine-region,
+        region: region,
         host-status: host-status,
     }
 
@@ -70,79 +71,6 @@ interface machines {
     enum cpu-kind {
         shared,
         performance,
-    }
-
-    enum machine-region {
-        /// Amsterdam, Netherlands
-        ams,
-        /// Stockholm, Sweden
-        arn,
-        /// Atlanta, Georgia (US)
-        atl,
-        /// Bogotá, Colombia
-        bog,
-        /// Mumbai, India
-        bom,
-        /// Boston, Massachusetts (US)
-        bos,
-        /// Paris, France
-        cdg,
-        /// Denver, Colorado (US)
-        den,
-        /// Dallas, Texas (US)
-        dfw,
-        /// Secaucus, NJ (US)
-        ewr,
-        /// Ezeiza, Argentina
-        eze,
-        /// Frankfurt, Germany
-        fra,
-        /// Guadalajara, Mexico
-        gdl,
-        /// Rio de Janeiro, Brazil
-        gig,
-        /// Sao Paulo, Brazil
-        gru,
-        /// Hong Kong, Hong Kong
-        hkg,
-        /// Ashburn, Virginia (US)
-        iad,
-        /// Johannesburg, South Africa
-        jnb,
-        /// Los Angeles, California (US)
-        lax,
-        /// London, United Kingdom
-        lhr,
-        /// Madrid, Spain
-        mad,
-        /// Miami, Florida (US)
-        mia,
-        /// Tokyo, Japan
-        nrt,
-        /// Chicago, Illinois (US)
-        ord,
-        /// Bucharest, Romania
-        otp,
-        /// Phoenix, Arizona (US)
-        phx,
-        /// Querétaro, Mexico
-        qro,
-        /// Santiago, Chile
-        scl,
-        /// Seattle, Washington (US)
-        sea,
-        /// Singapore, Singapore
-        sin,
-        /// San Jose, California (US)
-        sjc,
-        /// Sydney, Australia
-        syd,
-        /// Warsaw, Poland
-        waw,
-        /// Montreal, Canada
-        yul,
-        /// Toronto, Canada
-        yyz,
     }
 
     enum restart-policy {
@@ -181,9 +109,9 @@ interface machines {
 
     /// Create and start a machine under `app-name` with name `machine-name` and return its ID.
     /// If machine already exists, attributes of `machine-config` are not updated, just the machine ID is returned.
-    create: func(app-name: string, machine-name: string, machine-config: machine-config, region: option<machine-region>) -> result<string, string>;
+    create: func(app-name: string, machine-name: string, machine-config: machine-config, region: option<region>) -> result<string, string>;
 
-    update: func(app-name: string, machine-id: string, machine-config: machine-config, region: option<machine-region>) -> result<_, string>;
+    update: func(app-name: string, machine-id: string, machine-config: machine-config, region: option<region>) -> result<_, string>;
 
     suspend: func(app-name: string, machine-id: string) -> result<_, string>;
 
@@ -217,13 +145,13 @@ interface secrets {
 
 /// [Volumes API](https://docs.machines.dev/#tag/volumes)
 interface volumes {
-    use machines.{machine-region};
+    use regions.{region};
 
     record volume {
         id: string,
         name: string,
         state: string,
-        region: machine-region,
+        region: region,
         size-gb: u32,
         encrypted: bool,
         attached-machine-id: option<string>,
@@ -240,7 +168,7 @@ interface volumes {
     record volume-create-request {
         name: string,
         size-gb: u32,
-        region: machine-region,
+        region: region,
         require-unique-zone: option<bool>,
     }
 
@@ -267,3 +195,5 @@ world exports {
     export secrets;
     export volumes;
 }
+
+
