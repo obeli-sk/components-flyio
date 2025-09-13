@@ -1,4 +1,4 @@
-use crate::exports::activity_flyio::fly_http::machine::{
+use crate::exports::activity_flyio::fly_http::machines::{
     ExecResponse, Guest, Machine, MachineConfig, MachineRegion,
 };
 use crate::machine::ser::{MachineSer, ToLowerWrapper};
@@ -15,7 +15,7 @@ use wstd::runtime::block_on;
 // These structs are internal implementation details. They are designed to serialize
 // into the exact JSON format expected by the Fly.io Machines API.
 pub(crate) mod ser {
-    use crate::exports::activity_flyio::fly_http::machine::{
+    use crate::exports::activity_flyio::fly_http::machines::{
         CpuKind, ExecResponse, GuestConfig, HostStatus, InitConfig, Machine, MachineConfig,
         MachineRegion, MachineRestart, RestartPolicy, StopConfig,
     };
@@ -602,7 +602,7 @@ impl Guest for Component {
 mod tests {
     use super::ser::ResponseErrorSer;
     use crate::{
-        exports::activity_flyio::fly_http::machine::MachineRegion,
+        exports::activity_flyio::fly_http::machines::MachineRegion,
         machine::ser::{MachineSer, ToLowerWrapper},
     };
     use insta::assert_debug_snapshot;

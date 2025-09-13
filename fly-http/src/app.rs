@@ -1,11 +1,11 @@
-use crate::exports::activity_flyio::fly_http::app;
+use crate::exports::activity_flyio::fly_http::apps;
 use crate::{API_BASE_URL, request_with_api_token};
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use wstd::http::{Client, IntoBody as _, Method, StatusCode};
 use wstd::runtime::block_on;
 
-async fn put(org_slug: String, app_name: String) -> Result<app::App, anyhow::Error> {
+async fn put(org_slug: String, app_name: String) -> Result<apps::App, anyhow::Error> {
     let client = Client::new();
 
     // Attempt to create the app
@@ -35,7 +35,7 @@ async fn put(org_slug: String, app_name: String) -> Result<app::App, anyhow::Err
             id: String,
         }
         let app_response: AppResponse = response.body_mut().json().await?;
-        return Ok(app::App {
+        return Ok(apps::App {
             name: app_name,
             id: app_response.id,
         });
@@ -72,7 +72,7 @@ async fn put(org_slug: String, app_name: String) -> Result<app::App, anyhow::Err
             // Verify the organization slug matches
             if app_details.organization.slug == org_slug {
                 // Idempotency success: App exists and is in the correct org.
-                return Ok(app::App {
+                return Ok(apps::App {
                     id: app_details.id,
                     name: app_details.name,
                 });
@@ -95,7 +95,7 @@ async fn put(org_slug: String, app_name: String) -> Result<app::App, anyhow::Err
     ))
 }
 
-async fn list(org_slug: String) -> Result<Vec<app::App>, anyhow::Error> {
+async fn list(org_slug: String) -> Result<Vec<apps::App>, anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(format!("{API_BASE_URL}/apps?org_slug={org_slug}"))
@@ -106,7 +106,7 @@ async fn list(org_slug: String) -> Result<Vec<app::App>, anyhow::Error> {
     if response.status().is_success() {
         #[derive(Deserialize)]
         struct AppsResponse {
-            apps: Vec<app::App>,
+            apps: Vec<apps::App>,
         }
         let apps_response: AppsResponse = response.body_mut().json().await?;
         Ok(apps_response.apps)
@@ -143,16 +143,16 @@ async fn delete(app_name: String, force: bool) -> Result<(), anyhow::Error> {
     }
 }
 
-impl app::Guest for crate::Component {
+impl apps::Guest for crate::Component {
     /// Idempotently create a new fly.io app.
     /// If the app creation fails, check if the app already exists in the correct
     /// organization, otherwise return with an error.
-    fn put(org_slug: String, app_name: String) -> Result<app::App, String> {
+    fn put(org_slug: String, app_name: String) -> Result<apps::App, String> {
         block_on(put(org_slug, app_name)).map_err(|err| err.to_string())
     }
 
     /// List all fly.io apps in an organization.
-    fn list(org_slug: String) -> Result<Vec<app::App>, String> {
+    fn list(org_slug: String) -> Result<Vec<apps::App>, String> {
         block_on(list(org_slug)).map_err(|err| err.to_string())
     }
 

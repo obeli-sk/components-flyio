@@ -1,7 +1,7 @@
 package activity-flyio:fly-http@1.0.0-beta;
 
-/// [App API](https://docs.machines.dev/#tag/apps/get/apps)
-interface app {
+/// [Apps API](https://docs.machines.dev/#tag/apps/get/apps)
+interface apps {
 
     record app {
         name: string,
@@ -15,8 +15,8 @@ interface app {
     delete: func(app-name: string, force: bool) -> result<_, string>;
 }
 
-/// [Machine API](https://docs.machines.dev/#tag/machines/get/apps/{app_name}/machines)
-interface machine {
+/// [Machines API](https://docs.machines.dev/#tag/machines/get/apps/{app_name}/machines)
+interface machines {
 
     enum machine-state {
         created,
@@ -196,8 +196,8 @@ interface machine {
     exec: func(app-name: string, machine-id: string, command: list<string>) -> result<exec-response, string>;
 }
 
-/// [App Secret API](https://docs.machines.dev/#tag/secrets/get/apps/{app_name}/secrets)
-interface secret {
+/// [App Secrets API](https://docs.machines.dev/#tag/secrets/get/apps/{app_name}/secrets)
+interface secrets {
 
     record secret {
         name: string,
@@ -216,7 +216,7 @@ interface secret {
 }
 
 world exports {
-    export app;
-    export machine;
-    export secret;
+    export apps;
+    export machines;
+    export secrets;
 }
