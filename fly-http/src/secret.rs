@@ -2,7 +2,8 @@ use crate::exports::activity_flyio::fly_http::secrets;
 use crate::{API_BASE_URL, request_with_api_token};
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
-use wstd::http::{Client, IntoBody as _, Method};
+use wstd::http::request::JsonRequest as _;
+use wstd::http::{Client, Method};
 use wstd::runtime::block_on;
 
 async fn list_secrets(app_name: String) -> Result<Vec<secrets::Secret>, anyhow::Error> {
@@ -39,14 +40,12 @@ async fn put_secret(
     }
     let client = Client::new();
     let body = PutBody { value };
-    let body = serde_json::to_vec(&body)?;
     let request = request_with_api_token()?
         .method(Method::POST)
         .uri(format!(
             "{API_BASE_URL}/apps/{app_name}/secrets/{secret_name}"
         ))
-        .header("Content-Type", "application/json")
-        .body(body.into_body())?;
+        .json(&body)?;
 
     let mut response = client.send(request).await?;
 

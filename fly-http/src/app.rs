@@ -2,7 +2,8 @@ use crate::exports::activity_flyio::fly_http::apps;
 use crate::{API_BASE_URL, request_with_api_token};
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
-use wstd::http::{Client, IntoBody as _, Method, StatusCode};
+use wstd::http::request::JsonRequest as _;
+use wstd::http::{Client, Method, StatusCode};
 use wstd::runtime::block_on;
 
 async fn put(org_slug: String, app_name: String) -> Result<apps::App, anyhow::Error> {
@@ -19,13 +20,11 @@ async fn put(org_slug: String, app_name: String) -> Result<apps::App, anyhow::Er
         app_name: &app_name,
         org_slug: &org_slug,
     };
-    let body_bytes = serde_json::to_vec(&request_body)?;
 
     let post_request = request_with_api_token()?
         .method(Method::POST)
         .uri(format!("{API_BASE_URL}/apps"))
-        .header("Content-Type", "application/json")
-        .body(body_bytes.into_body())?;
+        .json(&request_body)?;
 
     let mut response = client.send(post_request).await?;
 

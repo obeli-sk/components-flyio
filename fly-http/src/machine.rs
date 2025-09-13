@@ -11,7 +11,7 @@ use ser::{
     MachineUpdateRequestSer, ResponseErrorSer,
 };
 use wstd::http::request::JsonRequest;
-use wstd::http::{Client, IntoBody as _, Method, StatusCode};
+use wstd::http::{Client, Method, StatusCode};
 use wstd::runtime::block_on;
 
 // These structs are internal implementation details. They are designed to serialize
@@ -393,14 +393,11 @@ async fn create(
             config: fly_config,
             region,
         };
-        let body = serde_json::to_string(&request_payload).expect("must be serializable");
-
         let url = format!("{API_BASE_URL}/apps/{app_name}/machines");
         let request = request_with_api_token()?
             .method(Method::POST)
             .uri(url)
-            .header("Content-Type", "application/json")
-            .body(body.into_body())?;
+            .json(&request_payload)?;
 
         let response = Client::new().send(request).await?;
         if response.status().is_success() {
@@ -451,14 +448,11 @@ async fn update(
             config: machine_config,
             region,
         };
-        let body = serde_json::to_string(&request_payload).expect("must be serializable");
-
         let url = format!("{API_BASE_URL}/apps/{app_name}/machines/{machine_id}");
         let request = request_with_api_token()?
             .method(Method::POST)
             .uri(url)
-            .header("Content-Type", "application/json")
-            .body(body.into_body())?;
+            .json(&request_payload)?;
 
         let response = Client::new().send(request).await?;
         if response.status().is_success() {
