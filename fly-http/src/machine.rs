@@ -70,21 +70,21 @@ pub(crate) mod ser {
 
     #[derive(Serialize, Deserialize, Debug)]
     pub(crate) struct MachineConfigSer {
-        pub(crate) image: String,
-        pub(crate) guest: Option<GuestConfigSer>,
-        pub(crate) auto_destroy: Option<bool>,
-        pub(crate) init: Option<InitConfigSer>,
-        pub(crate) env: Option<HashMap<String, String>>,
-        pub(crate) restart: Option<MachineRestartSer>,
-        pub(crate) stop_config: Option<StopConfigSer>,
+        image: String,
+        guest: Option<GuestConfigSer>,
+        auto_destroy: Option<bool>,
+        init: Option<InitConfigSer>,
+        env: Option<HashMap<String, String>>,
+        restart: Option<MachineRestartSer>,
+        stop_config: Option<StopConfigSer>,
     }
 
     #[derive(Serialize, Deserialize, Debug)]
     pub(crate) struct GuestConfigSer {
-        pub(crate) cpu_kind: Option<CpuKindSer>,
-        pub(crate) cpus: Option<u64>,
-        pub(crate) memory_mb: Option<u64>,
-        pub(crate) kernel_args: Option<Vec<String>>,
+        cpu_kind: Option<CpuKindSer>,
+        cpus: Option<u64>,
+        memory_mb: Option<u64>,
+        kernel_args: Option<Vec<String>>,
     }
 
     #[derive(Serialize, Deserialize, Debug)]
@@ -113,18 +113,18 @@ pub(crate) mod ser {
 
     #[derive(Serialize, Deserialize, Debug)]
     pub(crate) struct InitConfigSer {
-        pub(crate) cmd: Option<Vec<String>>,
-        pub(crate) entrypoint: Option<Vec<String>>,
-        pub(crate) exec: Option<Vec<String>>,
-        pub(crate) kernel_args: Option<Vec<String>>,
-        pub(crate) swap_size_mb: Option<u64>,
-        pub(crate) tty: Option<bool>,
+        cmd: Option<Vec<String>>,
+        entrypoint: Option<Vec<String>>,
+        exec: Option<Vec<String>>,
+        kernel_args: Option<Vec<String>>,
+        swap_size_mb: Option<u64>,
+        tty: Option<bool>,
     }
 
     #[derive(Serialize, Deserialize, Debug)]
     pub(crate) struct MachineRestartSer {
-        pub(crate) max_retries: Option<u32>,
-        pub(crate) policy: RestartPolicySer,
+        max_retries: Option<u32>,
+        policy: RestartPolicySer,
     }
 
     #[derive(Serialize, Deserialize, Debug)]
@@ -156,8 +156,8 @@ pub(crate) mod ser {
 
     #[derive(Serialize, Deserialize, Debug)]
     pub(crate) struct StopConfigSer {
-        pub(crate) signal: Option<String>,
-        pub(crate) timeout: Option<u64>,
+        signal: Option<String>,
+        timeout: Option<u64>,
     }
 
     #[derive(Deserialize)]
