@@ -76,7 +76,7 @@ pub(crate) mod ser {
         init: Option<InitConfigSer>,
         env: Option<HashMap<String, String>>,
         restart: Option<MachineRestartSer>,
-        stop_config: Option<StopConfigSer>,
+        stop_config: Option<StopConfig>,
         mounts: Option<Vec<Mount>>,
     }
 
@@ -153,12 +153,6 @@ pub(crate) mod ser {
                 RestartPolicySer::OnFailure => RestartPolicy::OnFailure,
             }
         }
-    }
-
-    #[derive(Serialize, Deserialize, Debug)]
-    pub(crate) struct StopConfigSer {
-        signal: Option<String>,
-        timeout: Option<u64>,
     }
 
     #[derive(Serialize, Deserialize, Debug)]
@@ -299,12 +293,6 @@ pub(crate) mod ser {
                 tty: i.tty,
             });
 
-            // Transform the stop config.
-            let stop_config = wit.stop_config.map(|s| StopConfigSer {
-                signal: s.signal,
-                timeout: s.timeout,
-            });
-
             MachineConfigSer {
                 image: wit.image,
                 auto_destroy: wit.auto_destroy,
@@ -312,7 +300,7 @@ pub(crate) mod ser {
                 guest,
                 restart,
                 init,
-                stop_config,
+                stop_config: wit.stop_config,
                 mounts: wit.mounts,
             }
         }
