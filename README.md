@@ -47,6 +47,28 @@ obelisk client execution submit -f activity-flyio:fly-http/machines@1.0.0-beta.l
 \"$FLY_APP_NAME\"
 ```
 
+List volumes:
+```sh
+obelisk client execution submit -f activity-flyio:fly-http/volumes@1.0.0-beta.list -- \
+\"$FLY_APP_NAME\"
+```
+
+Create a volume:
+```sh
+VOLUME_ID=$(obelisk client execution submit -f --json activity-flyio:fly-http/volumes@1.0.0-beta.create -- \
+\"$FLY_APP_NAME\" '{
+      "name": "my_app_vol",
+      "region": "ams",
+      "size-gb": 1
+    }' | jq -r '.[-1].ok.ok.id')
+```
+
+Destroy the volume:
+```sh
+obelisk client execution submit -f activity-flyio:fly-http/volumes@1.0.0-beta.delete -- \
+\"$FLY_APP_NAME\" \"$VOLUME_ID\"
+```
+
 Launch a VM:
 ```sh
 MACHINE_ID=$(obelisk client execution submit -f --json activity-flyio:fly-http/machines@1.0.0-beta.create -- \

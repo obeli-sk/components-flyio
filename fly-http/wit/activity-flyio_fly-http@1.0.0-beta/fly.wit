@@ -215,8 +215,55 @@ interface secrets {
 
 }
 
+/// [Volumes API](https://docs.machines.dev/#tag/volumes)
+interface volumes {
+    use machines.{machine-region};
+
+    record volume {
+        id: string,
+        name: string,
+        state: string,
+        region: machine-region,
+        size-gb: u32,
+        encrypted: bool,
+        attached-machine-id: option<string>,
+        host-status: string,
+        created-at: string,
+        blocks: u32,
+        block-size: u32,
+        blocks-free: u32,
+        blocks-avail: u32,
+        bytes-used: u32,
+        bytes-total: u32,
+    }
+
+    record volume-create-request {
+        name: string,
+        size-gb: u32,
+        region: machine-region,
+        require-unique-zone: option<bool>,
+    }
+
+    /// List all the volumes in an app.
+    %list: func(app-name: string) -> result<list<volume>, string>;
+
+    /// Create a volume.
+    create: func(app-name: string, request: volume-create-request) -> result<volume, string>;
+
+    /// Get a specific volume.
+    get: func(app-name: string, volume-id: string) -> result<volume, string>;
+
+    /// Extend a volume.
+    extend: func(app-name: string, volume-id: string, new-size-gb: u32) -> result<_, string>;
+
+    /// Delete a volume permanently.
+    delete: func(app-name: string, volume-id: string) -> result<_, string>;
+
+}
+
 world exports {
     export apps;
     export machines;
     export secrets;
+    export volumes;
 }
