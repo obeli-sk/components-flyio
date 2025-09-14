@@ -24,4 +24,4 @@ wstd = "0.5.6"
 
 [profile.release]
 opt-level = "s"
-debug = 1
+debug = "line-tables-only"
