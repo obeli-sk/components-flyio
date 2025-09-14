@@ -1,4 +1,4 @@
-use crate::exports::activity_flyio::fly_http::volumes::{Volume, VolumeCreateRequest};
+use crate::exports::obelisk_flyio::fly_http::volumes::{Volume, VolumeCreateRequest};
 use crate::machine::ser::ToLowerWrapper;
 use crate::{API_BASE_URL, Component, request_with_api_token};
 use anyhow::{Context, anyhow, bail};
@@ -12,8 +12,7 @@ use wstd::runtime::block_on;
 pub(crate) mod ser {
     use crate::machine::ser::ToLowerWrapper;
     use crate::{
-        activity_flyio::fly_http::regions::Region,
-        exports::activity_flyio::fly_http::volumes::Volume,
+        exports::obelisk_flyio::fly_http::volumes::Volume, obelisk_flyio::fly_http::regions::Region,
     };
     use serde::{Deserialize, Serialize};
 
@@ -204,7 +203,7 @@ async fn extend(
 }
 
 // Implementation of the volumes interface for the component.
-impl crate::exports::activity_flyio::fly_http::volumes::Guest for Component {
+impl crate::exports::obelisk_flyio::fly_http::volumes::Guest for Component {
     fn list(app_name: String) -> Result<Vec<Volume>, String> {
         block_on(list(app_name)).map_err(|err| err.to_string())
     }

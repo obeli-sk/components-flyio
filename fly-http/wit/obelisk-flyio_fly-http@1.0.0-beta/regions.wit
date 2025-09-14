@@ -1,4 +1,4 @@
-package activity-flyio:fly-http@1.0.0-beta;
+package obelisk-flyio:fly-http@1.0.0-beta;
 
 interface regions {
 
