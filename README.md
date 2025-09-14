@@ -1,9 +1,16 @@
-# Obelisk Activities for interacting with fly.io
+# WASM Components for interacting with fly.io
 
 ## activity-fly-http
-Activity that uses the official [Fly Machines API](https://fly.io/docs/machines/api/) to interact with Apps and VMs.
+Activity that uses the official [Machines API](https://docs.machines.dev/) to interact with:
+* Apps
+* VMs
+* Volumes
+* Secrets
 
-Check out the [WIT definition](activity-fly-http/wit/obelisk-flyio_fly-http@1.0.0-beta/fly.wit).
+Check out the [WIT definition](activity-fly-http/wit/obelisk-flyio_activity-fly-http@1.0.0-beta/fly.wit).
+
+## webhook-fly-secrets-updater
+Webhook endpoint for creating and updating secret values in a fly.io App.
 
 ### Prerequisites
 Obelisk, Rust and other dependencies can be installed using Nix and Direnv:
