@@ -11,6 +11,21 @@ cat <<EOF
         "cpus": 1,
         "memory-mb": 256
     },
+    "services": [
+        {
+            "internal-port": 8080,
+            "ports": [
+                {
+                    "handlers": [
+                        "http",
+                        "tls"
+                    ],
+                    "port": 443
+                }
+            ],
+            "protocol": "tcp"
+        }
+    ],
     "restart": {
         "policy": "no"
     }$(if [ -n "$VOLUME_ID" ]; then
