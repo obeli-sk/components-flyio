@@ -41,6 +41,11 @@ obelisk client execution submit -f  obelisk-flyio:fly-http/secrets@1.0.0-beta.li
 \"$FLY_APP_NAME\"
 ```
 
+Insert or update a secret (note this is a webhook endpoint to avoid persisting the secret):
+```sh
+curl -v localhost:9090/ -X POST -d '{"app_name":"'$FLY_APP_NAME'","name":"foo","value":"bar"}'
+```
+
 List VMs:
 ```sh
 obelisk client execution submit -f obelisk-flyio:fly-http/machines@1.0.0-beta.list -- \

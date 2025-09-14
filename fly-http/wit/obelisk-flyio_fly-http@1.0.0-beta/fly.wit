@@ -168,6 +168,8 @@ interface machines {
 }
 
 /// [App Secrets API](https://docs.machines.dev/#tag/secrets/get/apps/{app_name}/secrets)
+/// There is no function for inserting secret values because all parameters are persisted,
+/// use the webhook endpoint instead.
 interface secrets {
 
     record secret {
@@ -177,9 +179,6 @@ interface secrets {
 
     /// List all secret keys and  value digests for a given app.
     %list: func(app-name: string) -> result<list<secret>, string>;
-
-    /// Set a secret for a given app.
-    put: func(app-name: string, secret-name: string, value: string) -> result<secret, string>;
 
     /// Delete a secret from a given app.
     delete: func(app-name: string, secret-name: string) -> result<_, string>;

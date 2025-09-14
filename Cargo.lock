@@ -92,6 +92,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "fly-webhook-secrets-endpoint"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+ "wstd",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
