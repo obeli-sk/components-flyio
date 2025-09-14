@@ -14,14 +14,13 @@ forward_stdout = "stderr"
 forward_stderr = "stderr"
 
 [[webhook_endpoint]]
-name = "webhook_secrets_endpoint"
-location.path = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/fly_webhook_secrets_endpoint.wasm"
+name = "webhook_fly_secrets_updater"
+location.path = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/webhook_fly_secrets_updater.wasm"
 http_server = "webhook_server"
 routes = [{ methods = ["POST"], route = "/" }]
 env_vars = ["FLY_API_TOKEN"]
 forward_stdout = "stderr"
 forward_stderr = "stderr"
-
 
 [[http_server]]
 name = "webhook_server"

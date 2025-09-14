@@ -1,5 +1,5 @@
 [package]
-name = "fly-webhook-secrets-endpoint"
+name = "webhook-fly-secrets-updater"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
