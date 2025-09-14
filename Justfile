@@ -5,5 +5,5 @@ build:
 serve:
 	obelisk server run --config obelisk-local.toml
 
-test:
-	cargo nextest run
+test *args:
+	cargo nextest run --workspace {{args}}

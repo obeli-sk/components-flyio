@@ -1,5 +1,5 @@
 ---
-source: fly-http/src/machine.rs
+source: activity-fly-http/src/machine.rs
 expression: machine
 ---
 MachineSer {
@@ -41,6 +41,7 @@ MachineSer {
         ),
         stop_config: None,
         mounts: None,
+        services: None,
     },
     created_at: "2025-09-10T12:03:04Z",
     updated_at: "2025-09-10T12:03:07Z",
