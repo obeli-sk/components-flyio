@@ -1,7 +1,7 @@
-use crate::exports::obelisk_flyio::fly_http::machines::{
+use crate::exports::obelisk_flyio::activity_fly_http::machines::{
     ExecResponse, Guest, Machine, MachineConfig,
 };
-use crate::obelisk_flyio::fly_http::regions::Region;
+use crate::obelisk_flyio::activity_fly_http::regions::Region;
 
 use crate::machine::ser::{MachineSer, ToLowerWrapper};
 use crate::{API_BASE_URL, Component, request_with_api_token};
@@ -17,12 +17,12 @@ use wstd::runtime::block_on;
 // These structs are internal implementation details. They are designed to serialize
 // into the exact JSON format expected by the Fly.io Machines API.
 pub(crate) mod ser {
-    use crate::exports::obelisk_flyio::fly_http::machines::{
+    use crate::exports::obelisk_flyio::activity_fly_http::machines::{
         CpuKind, ExecResponse, GuestConfig, HostStatus, InitConfig, Machine, MachineConfig,
         MachineRestart, Mount, PortConfig, PortHandler, RestartPolicy, ServiceConfig,
         ServiceProtocol, StopConfig,
     };
-    use crate::obelisk_flyio::fly_http::regions::Region;
+    use crate::obelisk_flyio::activity_fly_http::regions::Region;
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
 
@@ -654,7 +654,7 @@ impl Guest for Component {
 mod tests {
     use super::ser::ResponseErrorSer;
     use crate::{
-        exports::obelisk_flyio::fly_http::machines::Region,
+        exports::obelisk_flyio::activity_fly_http::machines::Region,
         machine::ser::{MachineSer, ToLowerWrapper},
     };
     use insta::assert_debug_snapshot;

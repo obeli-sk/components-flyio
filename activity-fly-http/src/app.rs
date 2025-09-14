@@ -1,4 +1,4 @@
-use crate::exports::obelisk_flyio::fly_http::apps;
+use crate::exports::obelisk_flyio::activity_fly_http::apps;
 use crate::{API_BASE_URL, request_with_api_token};
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};

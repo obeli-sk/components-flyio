@@ -1,4 +1,4 @@
-package obelisk-flyio:fly-http@1.0.0-beta;
+package obelisk-flyio:activity-fly-http@1.0.0-beta;
 
 /// [Apps API](https://docs.machines.dev/#tag/apps/get/apps)
 interface apps {

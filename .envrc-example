@@ -1,6 +1,6 @@
 use flake .
 
-# Needed for fly-http activity
+# Needed for activity-fly-http and the webhook
 export FLY_API_TOKEN="..."
 
 # Using the real org-slug instead of "personal" alias is advised, see https://fly.io/organizations

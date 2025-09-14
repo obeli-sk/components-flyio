@@ -1,9 +1,9 @@
 # Obelisk Activities for interacting with fly.io
 
-## fly-http
+## activity-fly-http
 Activity that uses the official [Fly Machines API](https://fly.io/docs/machines/api/) to interact with Apps and VMs.
 
-Check out the [WIT definition](fly-http/wit/obelisk-flyio_fly-http@1.0.0-beta/fly.wit).
+Check out the [WIT definition](activity-fly-http/wit/obelisk-flyio_fly-http@1.0.0-beta/fly.wit).
 
 ### Prerequisites
 Obelisk, Rust and other dependencies can be installed using Nix and Direnv:
@@ -25,19 +25,19 @@ Executions can be submitted and observed either using CLI or the WebUI at http:/
 
 List apps:
 ```sh
-obelisk client execution submit -f obelisk-flyio:fly-http/apps@1.0.0-beta.list -- \
+obelisk client execution submit -f obelisk-flyio:activity-fly-http/apps@1.0.0-beta.list -- \
 \"$FLY_ORG_SLUG\"
 ```
 
 Create an app:
 ```sh
-obelisk client execution submit -f obelisk-flyio:fly-http/apps@1.0.0-beta.put -- \
+obelisk client execution submit -f obelisk-flyio:activity-fly-http/apps@1.0.0-beta.put -- \
 \"$FLY_ORG_SLUG\" \"$FLY_APP_NAME\"
 ```
 
-List secrets of the app:
+List secret keys of the app:
 ```sh
-obelisk client execution submit -f  obelisk-flyio:fly-http/secrets@1.0.0-beta.list -- \
+obelisk client execution submit -f  obelisk-flyio:activity-fly-http/secrets@1.0.0-beta.list -- \
 \"$FLY_APP_NAME\"
 ```
 
@@ -48,19 +48,19 @@ curl -v localhost:9090/ -X POST -d '{"app_name":"'$FLY_APP_NAME'","name":"foo","
 
 List VMs:
 ```sh
-obelisk client execution submit -f obelisk-flyio:fly-http/machines@1.0.0-beta.list -- \
+obelisk client execution submit -f obelisk-flyio:activity-fly-http/machines@1.0.0-beta.list -- \
 \"$FLY_APP_NAME\"
 ```
 
 List volumes:
 ```sh
-obelisk client execution submit -f obelisk-flyio:fly-http/volumes@1.0.0-beta.list -- \
+obelisk client execution submit -f obelisk-flyio:activity-fly-http/volumes@1.0.0-beta.list -- \
 \"$FLY_APP_NAME\"
 ```
 
 Create a volume:
 ```sh
-export VOLUME_ID=$(obelisk client execution submit -f --json obelisk-flyio:fly-http/volumes@1.0.0-beta.create -- \
+export VOLUME_ID=$(obelisk client execution submit -f --json obelisk-flyio:activity-fly-http/volumes@1.0.0-beta.create -- \
 \"$FLY_APP_NAME\" '{
       "name": "my_app_vol",
       "region": "ams",
@@ -70,19 +70,19 @@ export VOLUME_ID=$(obelisk client execution submit -f --json obelisk-flyio:fly-h
 
 Delete the volume:
 ```sh
-obelisk client execution submit -f obelisk-flyio:fly-http/volumes@1.0.0-beta.delete -- \
+obelisk client execution submit -f obelisk-flyio:activity-fly-http/volumes@1.0.0-beta.delete -- \
 \"$FLY_APP_NAME\" \"$VOLUME_ID\"
 ```
 
 Launch a VM:
 ```sh
-MACHINE_ID=$(obelisk client execution submit -f --json obelisk-flyio:fly-http/machines@1.0.0-beta.create -- \
+MACHINE_ID=$(obelisk client execution submit -f --json obelisk-flyio:activity-fly-http/machines@1.0.0-beta.create -- \
 \"$FLY_APP_NAME\" \"$FLY_MACHINE_NAME\" "$(./scripts/fly-http-machine-config.json.sh)" \"$FLY_REGION\" \
 | jq -r '.[-1].ok.ok')
 ```
 
 Delete the VM:
 ```sh
-obelisk client execution submit -f obelisk-flyio:fly-http/machines@1.0.0-beta.delete -- \
+obelisk client execution submit -f obelisk-flyio:activity-fly-http/machines@1.0.0-beta.delete -- \
 \"$FLY_APP_NAME\" \"$MACHINE_ID\" true
 ```

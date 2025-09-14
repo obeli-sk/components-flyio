@@ -6,7 +6,7 @@ enabled = true
 
 [[activity_wasm]]
 name = "activity_fly_http"
-location.path = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/fly_http.wasm"
+location.path = "${OBELISK_TOML_DIR}/target/wasm32-wasip2/release/activity_fly_http.wasm"
 max_retries = 0
 exec.lock_expiry.seconds = 15
 env_vars = ["FLY_API_TOKEN"]
