@@ -509,15 +509,15 @@ async fn exec(
 }
 
 async fn change_machine(
-    app_name: &str,
-    machine_id: &str,
-    url_suffix: &str,
+    app_name: String,
+    machine_id: String,
+    url_suffix: &'static str,
 ) -> Result<(), anyhow::Error> {
     let url = format!("{API_BASE_URL}/apps/{app_name}/machines/{machine_id}/{url_suffix}");
-    send_request(&url, Method::POST).await
+    send_request(url, Method::POST).await
 }
 
-async fn send_request(url: &str, method: Method) -> Result<(), anyhow::Error> {
+async fn send_request(url: String, method: Method) -> Result<(), anyhow::Error> {
     let request = request_with_api_token()?
         .method(method)
         .uri(url)
@@ -565,24 +565,24 @@ impl Guest for Component {
     }
 
     fn stop(app_name: String, machine_id: String) -> Result<(), String> {
-        block_on(change_machine(&app_name, &machine_id, "stop")).map_err(|err| err.to_string())
+        block_on(change_machine(app_name, machine_id, "stop")).map_err(|err| err.to_string())
     }
 
     fn suspend(app_name: String, machine_id: String) -> Result<(), String> {
-        block_on(change_machine(&app_name, &machine_id, "suspend")).map_err(|err| err.to_string())
+        block_on(change_machine(app_name, machine_id, "suspend")).map_err(|err| err.to_string())
     }
 
     fn start(app_name: String, machine_id: String) -> Result<(), String> {
-        block_on(change_machine(&app_name, &machine_id, "start")).map_err(|err| err.to_string())
+        block_on(change_machine(app_name, machine_id, "start")).map_err(|err| err.to_string())
     }
 
     fn restart(app_name: String, machine_id: String) -> Result<(), String> {
-        block_on(change_machine(&app_name, &machine_id, "restart")).map_err(|err| err.to_string())
+        block_on(change_machine(app_name, machine_id, "restart")).map_err(|err| err.to_string())
     }
 
     fn delete(app_name: String, machine_id: String, force: bool) -> Result<(), String> {
         let url = format!("{API_BASE_URL}/apps/{app_name}/machines/{machine_id}?force={force}");
-        block_on(send_request(&url, Method::DELETE)).map_err(|err| err.to_string())
+        block_on(send_request(url, Method::DELETE)).map_err(|err| err.to_string())
     }
 
     fn exec(
