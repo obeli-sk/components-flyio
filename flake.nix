@@ -37,7 +37,7 @@
               pkg-config
               rustToolchain
               wasm-tools
-              wasmtime
+              wasmtime.out
             ];
           withObelisk = commonDeps ++ [ obelisk.packages.${system}.default ];
 
