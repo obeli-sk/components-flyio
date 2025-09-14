@@ -55,7 +55,7 @@ obelisk client execution submit -f obelisk-flyio:fly-http/volumes@1.0.0-beta.lis
 
 Create a volume:
 ```sh
-VOLUME_ID=$(obelisk client execution submit -f --json obelisk-flyio:fly-http/volumes@1.0.0-beta.create -- \
+export VOLUME_ID=$(obelisk client execution submit -f --json obelisk-flyio:fly-http/volumes@1.0.0-beta.create -- \
 \"$FLY_APP_NAME\" '{
       "name": "my_app_vol",
       "region": "ams",
