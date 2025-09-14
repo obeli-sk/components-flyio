@@ -11,7 +11,11 @@ interface apps {
     /// Idempotently create a new fly.io app.
     /// Using "personal" alias for org-slug works but will return an error on retry: "already exists but belongs to different organization"
     put: func(org-slug: string, app-name: string) -> result<app, string>;
+
+    /// List all application within an organization.
     %list: func(org-slug: string) -> result<list<app>, string>;
+
+    /// Delete application with all its associated resources.
     delete: func(app-name: string, force: bool) -> result<_, string>;
 }
 
@@ -60,6 +64,7 @@ interface machines {
         restart: option<machine-restart>,
         stop-config: option<stop-config>,
         mounts: option<list<mount>>,
+        services: option<list<service-config>>,
     }
 
     record mount {
@@ -111,6 +116,33 @@ interface machines {
         stdout: option<string>,
     }
 
+    /// Configuration for a single service (port forwarding rule)
+    record service-config {
+        internal-port: u16,
+        protocol: service-protocol,
+        ports: list<port-config>,
+    }
+
+    /// Protocol for a service
+    enum service-protocol {
+        tcp,
+        udp,
+    }
+
+    /// Configuration for an external port
+    record port-config {
+        port: u16,
+        handlers: list<port-handler>,
+    }
+
+    /// Handlers for a port
+    enum port-handler {
+        http,
+        tls,
+        pg, // PostgreSQL
+    }
+
+    /// List machines
     %list: func(app-name: string) -> result<list<machine>, string>;
 
     /// Create and start a machine under `app-name` with name `machine-name` and return its ID.
@@ -203,5 +235,3 @@ world exports {
     export secrets;
     export volumes;
 }
-
-

@@ -20,7 +20,8 @@ pub(crate) mod ser {
     use crate::activity_flyio::fly_http::regions::Region;
     use crate::exports::activity_flyio::fly_http::machines::{
         CpuKind, ExecResponse, GuestConfig, HostStatus, InitConfig, Machine, MachineConfig,
-        MachineRestart, Mount, RestartPolicy, StopConfig,
+        MachineRestart, Mount, PortConfig, PortHandler, RestartPolicy, ServiceConfig,
+        ServiceProtocol, StopConfig,
     };
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
@@ -78,6 +79,7 @@ pub(crate) mod ser {
         restart: Option<MachineRestartSer>,
         stop_config: Option<StopConfig>,
         mounts: Option<Vec<Mount>>,
+        services: Option<Vec<ServiceConfigSer>>,
     }
 
     #[derive(Serialize, Deserialize, Debug)]
@@ -161,6 +163,53 @@ pub(crate) mod ser {
         path: String,
     }
 
+    #[derive(Debug, Serialize, Deserialize)]
+    pub(crate) struct PortConfigSer {
+        port: u16,
+        handlers: Vec<ToLowerWrapper<PortHandler>>,
+    }
+    impl From<PortConfig> for PortConfigSer {
+        fn from(wit: PortConfig) -> Self {
+            PortConfigSer {
+                port: wit.port,
+                handlers: wit.handlers.into_iter().map(ToLowerWrapper).collect(),
+            }
+        }
+    }
+    impl From<PortConfigSer> for PortConfig {
+        fn from(ser: PortConfigSer) -> PortConfig {
+            PortConfig {
+                port: ser.port,
+                handlers: ser.handlers.into_iter().map(|wrapper| wrapper.0).collect(),
+            }
+        }
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    pub(crate) struct ServiceConfigSer {
+        internal_port: u16,
+        protocol: ToLowerWrapper<ServiceProtocol>,
+        ports: Vec<PortConfigSer>,
+    }
+    impl From<ServiceConfig> for ServiceConfigSer {
+        fn from(wit: ServiceConfig) -> Self {
+            ServiceConfigSer {
+                internal_port: wit.internal_port,
+                protocol: ToLowerWrapper(wit.protocol),
+                ports: wit.ports.into_iter().map(PortConfigSer::from).collect(),
+            }
+        }
+    }
+    impl From<ServiceConfigSer> for ServiceConfig {
+        fn from(ser: ServiceConfigSer) -> ServiceConfig {
+            ServiceConfig {
+                internal_port: ser.internal_port,
+                protocol: ser.protocol.0,
+                ports: ser.ports.into_iter().map(PortConfig::from).collect(),
+            }
+        }
+    }
+
     #[derive(Deserialize)]
     pub(crate) struct MachineCreateResponseSer {
         pub(crate) id: String,
@@ -205,7 +254,8 @@ pub(crate) mod ser {
 
     use std::fmt::Debug;
     #[derive(derive_more::Debug)]
-    #[debug("{_0:?}")]
+    #[debug("{_0:?}")] // Transparent debug
+    // FIXME: Remove once wit-bindgen supports path-specific derives
     pub(crate) struct ToLowerWrapper<T: Debug + Serialize + DeserializeOwned>(pub(crate) T);
 
     impl<T: Debug + Serialize + DeserializeOwned> Serialize for ToLowerWrapper<T> {
@@ -302,6 +352,9 @@ pub(crate) mod ser {
                 init,
                 stop_config: wit.stop_config,
                 mounts: wit.mounts,
+                services: wit
+                    .services
+                    .map(|vec| vec.into_iter().map(ServiceConfigSer::from).collect()),
             }
         }
     }
@@ -350,6 +403,9 @@ pub(crate) mod ser {
                 init,
                 stop_config,
                 mounts: ser.mounts,
+                services: ser
+                    .services
+                    .map(|vec| vec.into_iter().map(ServiceConfig::from).collect()),
             }
         }
     }
