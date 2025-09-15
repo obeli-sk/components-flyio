@@ -111,33 +111,13 @@ pub(crate) mod ser {
     #[derive(Serialize, Deserialize, Debug)]
     pub(crate) struct MachineRestartSer {
         max_retries: Option<u32>,
-        policy: RestartPolicySer,
+        policy: RestartPolicyWrapper,
     }
 
-    #[derive(Serialize, Deserialize, Debug)]
-    #[serde(rename_all = "kebab-case")]
-    pub(crate) enum RestartPolicySer {
-        No,
-        Always,
-        // must be serialized as `on-failure`
-        OnFailure,
-    }
-    impl From<RestartPolicy> for RestartPolicySer {
-        fn from(value: RestartPolicy) -> RestartPolicySer {
-            match value {
-                RestartPolicy::No => Self::No,
-                RestartPolicy::Always => Self::Always,
-                RestartPolicy::OnFailure => Self::OnFailure,
-            }
-        }
-    }
-    impl From<RestartPolicySer> for RestartPolicy {
-        fn from(value: RestartPolicySer) -> RestartPolicy {
-            match value {
-                RestartPolicySer::No => RestartPolicy::No,
-                RestartPolicySer::Always => RestartPolicy::Always,
-                RestartPolicySer::OnFailure => RestartPolicy::OnFailure,
-            }
+    type RestartPolicyWrapper = ToLowerWrapper<RestartPolicy>;
+    impl From<RestartPolicyWrapper> for RestartPolicy {
+        fn from(value: RestartPolicyWrapper) -> RestartPolicy {
+            value.0
         }
     }
 
