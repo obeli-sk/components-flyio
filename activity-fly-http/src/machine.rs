@@ -84,33 +84,22 @@ pub(crate) mod ser {
 
     #[derive(Serialize, Deserialize, Debug)]
     pub(crate) struct GuestConfigSer {
-        cpu_kind: Option<CpuKindSer>,
+        cpu_kind: Option<CpuKindWrapper>,
         cpus: Option<u64>,
         memory_mb: Option<u64>,
         kernel_args: Option<Vec<String>>,
     }
 
-    #[derive(Serialize, Deserialize, Debug)]
-    #[serde(rename_all = "kebab-case")]
-    pub(crate) enum CpuKindSer {
-        Shared,
-        Performance,
-    }
+    type CpuKindWrapper = ToLowerWrapper<CpuKind>;
 
-    impl From<CpuKind> for CpuKindSer {
+    impl From<CpuKind> for CpuKindWrapper {
         fn from(value: CpuKind) -> Self {
-            match value {
-                CpuKind::Performance => CpuKindSer::Performance,
-                CpuKind::Shared => CpuKindSer::Shared,
-            }
+            ToLowerWrapper(value)
         }
     }
-    impl From<CpuKindSer> for CpuKind {
-        fn from(value: CpuKindSer) -> CpuKind {
-            match value {
-                CpuKindSer::Performance => CpuKind::Performance,
-                CpuKindSer::Shared => CpuKind::Shared,
-            }
+    impl From<CpuKindWrapper> for CpuKind {
+        fn from(value: CpuKindWrapper) -> CpuKind {
+            value.0
         }
     }
 
@@ -321,7 +310,7 @@ pub(crate) mod ser {
 
             // Transform the guest config.
             let guest = wit.guest.map(|g| GuestConfigSer {
-                cpu_kind: g.cpu_kind.map(|cpu_kind| cpu_kind.into()),
+                cpu_kind: g.cpu_kind.map(|cpu_kind_wit| cpu_kind_wit.into()),
                 cpus: g.cpus,
                 memory_mb: g.memory_mb,
                 kernel_args: g.kernel_args,
@@ -366,7 +355,7 @@ pub(crate) mod ser {
 
             // Revert the guest config.
             let guest = ser.guest.map(|g| GuestConfig {
-                cpu_kind: g.cpu_kind.map(|cpu_kind| cpu_kind.into()),
+                cpu_kind: g.cpu_kind.map(|cpu_kind_ser| cpu_kind_ser.into()),
                 cpus: g.cpus,
                 memory_mb: g.memory_mb,
                 kernel_args: g.kernel_args,
