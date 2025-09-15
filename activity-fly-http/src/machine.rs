@@ -92,11 +92,6 @@ pub(crate) mod ser {
 
     type CpuKindWrapper = ToLowerWrapper<CpuKind>;
 
-    impl From<CpuKind> for CpuKindWrapper {
-        fn from(value: CpuKind) -> Self {
-            ToLowerWrapper(value)
-        }
-    }
     impl From<CpuKindWrapper> for CpuKind {
         fn from(value: CpuKindWrapper) -> CpuKind {
             value.0
@@ -242,7 +237,7 @@ pub(crate) mod ser {
     }
 
     use std::fmt::Debug;
-    #[derive(derive_more::Debug)]
+    #[derive(derive_more::Debug, derive_more::From)]
     #[debug("{_0:?}")] // Transparent debug
     // FIXME: Remove once wit-bindgen supports path-specific derives
     pub(crate) struct ToLowerWrapper<T: Debug + Serialize + DeserializeOwned>(pub(crate) T);
