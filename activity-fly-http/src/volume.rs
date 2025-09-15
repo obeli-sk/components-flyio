@@ -1,5 +1,5 @@
 use crate::exports::obelisk_flyio::activity_fly_http::volumes::{Volume, VolumeCreateRequest};
-use crate::machine::ser::ToLowerWrapper;
+use crate::serde::ToLowerWrapper;
 use crate::{API_BASE_URL, Component, request_with_api_token};
 use anyhow::{Context, anyhow, bail};
 use ser::{VolumeCreateRequestSer, VolumeSer};
@@ -10,7 +10,7 @@ use wstd::runtime::block_on;
 // These structs are internal implementation details. They are designed to serialize
 // into the exact JSON format expected by the Fly.io Volumes API.
 pub(crate) mod ser {
-    use crate::machine::ser::ToLowerWrapper;
+    use crate::serde::ToLowerWrapper;
     use crate::{
         exports::obelisk_flyio::activity_fly_http::volumes::Volume,
         obelisk_flyio::activity_fly_http::regions::Region,

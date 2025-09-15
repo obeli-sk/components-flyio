@@ -1,6 +1,7 @@
 mod app;
 mod machine;
 mod secret;
+mod serde;
 mod volume;
 
 use anyhow::Context;
