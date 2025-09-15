@@ -694,7 +694,7 @@ mod tests {
               },
               "image": "getobelisk/obelisk:0.24.1-ubuntu",
               "restart": {
-                "policy": "no"
+                "policy": "on-failure"
               }
             },
             "incomplete_config": null,
