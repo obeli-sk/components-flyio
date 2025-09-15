@@ -1,5 +1,5 @@
 use crate::exports::obelisk_flyio::activity_fly_http::volumes::{Volume, VolumeCreateRequest};
-use crate::serde::ToLowerWrapper;
+use crate::serde::KebabWrapper;
 use crate::{API_BASE_URL, Component, request_with_api_token};
 use anyhow::{Context, anyhow, bail};
 use ser::{VolumeCreateRequestSer, VolumeSer};
@@ -10,7 +10,7 @@ use wstd::runtime::block_on;
 // These structs are internal implementation details. They are designed to serialize
 // into the exact JSON format expected by the Fly.io Volumes API.
 pub(crate) mod ser {
-    use crate::serde::ToLowerWrapper;
+    use crate::serde::KebabWrapper;
     use crate::{
         exports::obelisk_flyio::activity_fly_http::volumes::Volume,
         obelisk_flyio::activity_fly_http::regions::Region,
@@ -21,7 +21,7 @@ pub(crate) mod ser {
     pub(crate) struct VolumeCreateRequestSer {
         pub(crate) name: String,
         pub(crate) size_gb: u32,
-        pub(crate) region: ToLowerWrapper<Region>,
+        pub(crate) region: KebabWrapper<Region>,
         #[serde(rename = "require_unique_zone")]
         pub(crate) require_unique_zone: Option<bool>,
     }
@@ -31,7 +31,7 @@ pub(crate) mod ser {
         pub(crate) id: String,
         pub(crate) name: String,
         pub(crate) state: String,
-        pub(crate) region: ToLowerWrapper<Region>,
+        pub(crate) region: KebabWrapper<Region>,
         pub(crate) size_gb: u32,
         pub(crate) encrypted: bool,
         pub(crate) attached_machine_id: Option<String>,
@@ -100,7 +100,7 @@ async fn create(app_name: String, request: VolumeCreateRequest) -> Result<Volume
     let fly_request = VolumeCreateRequestSer {
         name: request.name,
         size_gb: request.size_gb,
-        region: ToLowerWrapper(request.region),
+        region: KebabWrapper(request.region),
         require_unique_zone: request.require_unique_zone,
     };
     let url = format!("{API_BASE_URL}/apps/{app_name}/volumes");

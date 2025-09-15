@@ -4,7 +4,7 @@ use crate::exports::obelisk_flyio::activity_fly_http::machines::{
 use crate::obelisk_flyio::activity_fly_http::regions::Region;
 
 use crate::machine::ser::MachineSer;
-use crate::serde::ToLowerWrapper;
+use crate::serde::KebabWrapper;
 use crate::{API_BASE_URL, Component, request_with_api_token};
 use anyhow::{Context, anyhow, bail, ensure};
 use ser::{
@@ -24,7 +24,7 @@ pub(crate) mod ser {
         ServiceProtocol, StopConfig,
     };
     use crate::obelisk_flyio::activity_fly_http::regions::Region;
-    use crate::serde::ToLowerWrapper;
+    use crate::serde::KebabWrapper;
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
 
@@ -32,13 +32,13 @@ pub(crate) mod ser {
     pub(crate) struct MachineCreateRequestSer {
         pub(crate) name: String,
         pub(crate) config: MachineConfigSer,
-        pub(crate) region: Option<ToLowerWrapper<Region>>,
+        pub(crate) region: Option<KebabWrapper<Region>>,
     }
 
     #[derive(Serialize, Debug)]
     pub(crate) struct MachineUpdateRequestSer {
         pub(crate) config: MachineConfigSer,
-        pub(crate) region: Option<ToLowerWrapper<Region>>,
+        pub(crate) region: Option<KebabWrapper<Region>>,
     }
 
     #[derive(Deserialize, Debug)]
@@ -50,8 +50,8 @@ pub(crate) mod ser {
         instance_id: String,
         name: String,
         state: String,
-        region: ToLowerWrapper<Region>,
-        host_status: ToLowerWrapper<HostStatus>,
+        region: KebabWrapper<Region>,
+        host_status: KebabWrapper<HostStatus>,
     }
     impl From<MachineSer> for Machine {
         fn from(value: MachineSer) -> Machine {
@@ -90,7 +90,7 @@ pub(crate) mod ser {
         kernel_args: Option<Vec<String>>,
     }
 
-    type CpuKindWrapper = ToLowerWrapper<CpuKind>;
+    type CpuKindWrapper = KebabWrapper<CpuKind>;
 
     impl From<CpuKindWrapper> for CpuKind {
         fn from(value: CpuKindWrapper) -> CpuKind {
@@ -114,7 +114,7 @@ pub(crate) mod ser {
         policy: RestartPolicyWrapper,
     }
 
-    type RestartPolicyWrapper = ToLowerWrapper<RestartPolicy>;
+    type RestartPolicyWrapper = KebabWrapper<RestartPolicy>;
     impl From<RestartPolicyWrapper> for RestartPolicy {
         fn from(value: RestartPolicyWrapper) -> RestartPolicy {
             value.0
@@ -130,13 +130,13 @@ pub(crate) mod ser {
     #[derive(Debug, Serialize, Deserialize)]
     pub(crate) struct PortConfigSer {
         port: u16,
-        handlers: Vec<ToLowerWrapper<PortHandler>>,
+        handlers: Vec<KebabWrapper<PortHandler>>,
     }
     impl From<PortConfig> for PortConfigSer {
         fn from(wit: PortConfig) -> Self {
             PortConfigSer {
                 port: wit.port,
-                handlers: wit.handlers.into_iter().map(ToLowerWrapper).collect(),
+                handlers: wit.handlers.into_iter().map(KebabWrapper).collect(),
             }
         }
     }
@@ -152,14 +152,14 @@ pub(crate) mod ser {
     #[derive(Debug, Serialize, Deserialize)]
     pub(crate) struct ServiceConfigSer {
         internal_port: u16,
-        protocol: ToLowerWrapper<ServiceProtocol>,
+        protocol: KebabWrapper<ServiceProtocol>,
         ports: Vec<PortConfigSer>,
     }
     impl From<ServiceConfig> for ServiceConfigSer {
         fn from(wit: ServiceConfig) -> Self {
             ServiceConfigSer {
                 internal_port: wit.internal_port,
-                protocol: ToLowerWrapper(wit.protocol),
+                protocol: KebabWrapper(wit.protocol),
                 ports: wit.ports.into_iter().map(PortConfigSer::from).collect(),
             }
         }
@@ -344,7 +344,7 @@ async fn create(
     region: Option<Region>,
 ) -> Result<String, anyhow::Error> {
     {
-        let region = region.map(ToLowerWrapper);
+        let region = region.map(KebabWrapper);
         let fly_config = MachineConfigSer::from(machine_config);
         let request_payload = MachineCreateRequestSer {
             name: machine_name,
@@ -400,7 +400,7 @@ async fn update(
     region: Option<Region>,
 ) -> Result<(), anyhow::Error> {
     {
-        let region = region.map(ToLowerWrapper);
+        let region = region.map(KebabWrapper);
         let machine_config = MachineConfigSer::from(machine_config);
         let request_payload = MachineUpdateRequestSer {
             config: machine_config,
@@ -558,7 +558,7 @@ mod tests {
     use crate::{
         exports::obelisk_flyio::activity_fly_http::machines::{Machine, Region},
         machine::ser::MachineSer,
-        serde::ToLowerWrapper,
+        serde::KebabWrapper,
     };
     use insta::assert_debug_snapshot;
     use serde_json::json;
@@ -567,7 +567,7 @@ mod tests {
     fn region_ser() {
         assert_eq!(
             "\"ams\"",
-            serde_json::to_string(&ToLowerWrapper(Region::Ams)).unwrap()
+            serde_json::to_string(&KebabWrapper(Region::Ams)).unwrap()
         );
     }
 
@@ -575,7 +575,7 @@ mod tests {
     fn region_de() {
         assert_matches::assert_matches!(
             serde_json::from_str("\"ams\"").unwrap(),
-            ToLowerWrapper(Region::Ams)
+            KebabWrapper(Region::Ams)
         );
     }
 

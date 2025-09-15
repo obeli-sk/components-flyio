@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 #[derive(derive_more::Debug, derive_more::From)]
 #[debug("{_0:?}")] // Transparent debug
 // FIXME: Remove once wit-bindgen supports path-specific derives
-pub(crate) struct ToLowerWrapper<T: Debug + Serialize + DeserializeOwned>(pub(crate) T);
+pub(crate) struct KebabWrapper<T: Debug + Serialize + DeserializeOwned>(pub(crate) T);
 
-impl<T: Debug + Serialize + DeserializeOwned> Serialize for ToLowerWrapper<T> {
+impl<T: Debug + Serialize + DeserializeOwned> Serialize for KebabWrapper<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -23,23 +23,23 @@ impl<T: Debug + Serialize + DeserializeOwned> Serialize for ToLowerWrapper<T> {
     }
 }
 
-impl<'de, T: Debug + Serialize + DeserializeOwned> Deserialize<'de> for ToLowerWrapper<T> {
+impl<'de, T: Debug + Serialize + DeserializeOwned> Deserialize<'de> for KebabWrapper<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        deserializer.deserialize_string(RegionVisitor {
+        deserializer.deserialize_string(KebabVisitor {
             _phantom_data: Default::default(),
         })
     }
 }
 
-struct RegionVisitor<T: Debug + Serialize + DeserializeOwned> {
+struct KebabVisitor<T: Debug + Serialize + DeserializeOwned> {
     _phantom_data: std::marker::PhantomData<T>,
 }
 
-impl<'de, T: Debug + Serialize + DeserializeOwned> serde::de::Visitor<'de> for RegionVisitor<T> {
-    type Value = ToLowerWrapper<T>;
+impl<'de, T: Debug + Serialize + DeserializeOwned> serde::de::Visitor<'de> for KebabVisitor<T> {
+    type Value = KebabWrapper<T>;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
         let expected_type = std::any::type_name::<T>().rsplit("::").next().unwrap();
@@ -55,7 +55,7 @@ impl<'de, T: Debug + Serialize + DeserializeOwned> serde::de::Visitor<'de> for R
 
         let serde_value = serde_json::value::Value::String(camel_cased.to_string());
         serde_json::from_value::<T>(serde_value)
-            .map(|inner| ToLowerWrapper(inner))
+            .map(|inner| KebabWrapper(inner))
             .map_err(E::custom)
     }
 }
