@@ -2,31 +2,31 @@
 source: activity-fly-http/src/machine.rs
 expression: machine
 ---
-MachineSer {
-    config: MachineConfigSer {
+Machine {
+    config: MachineConfig {
         image: "getobelisk/obelisk:0.24.1-ubuntu",
         guest: Some(
-            GuestConfigSer {
-                cpu_kind: Some(
-                    Shared,
+            GuestConfig {
+                cpu-kind: Some(
+                    CpuKind::Shared,
                 ),
                 cpus: Some(
                     1,
                 ),
-                memory_mb: Some(
+                memory-mb: Some(
                     256,
                 ),
-                kernel_args: None,
+                kernel-args: None,
             },
         ),
-        auto_destroy: None,
+        auto-destroy: None,
         init: Some(
-            InitConfigSer {
+            InitConfig {
                 cmd: None,
                 entrypoint: None,
                 exec: None,
-                kernel_args: None,
-                swap_size_mb: Some(
+                kernel-args: None,
+                swap-size-mb: Some(
                     256,
                 ),
                 tty: None,
@@ -34,21 +34,21 @@ MachineSer {
         ),
         env: None,
         restart: Some(
-            MachineRestartSer {
-                max_retries: None,
-                policy: No,
+            MachineRestart {
+                max-retries: None,
+                policy: RestartPolicy::No,
             },
         ),
-        stop_config: None,
+        stop-config: None,
         mounts: None,
         services: None,
     },
-    created_at: "2025-09-10T12:03:04Z",
-    updated_at: "2025-09-10T12:03:07Z",
+    created-at: "2025-09-10T12:03:04Z",
+    updated-at: "2025-09-10T12:03:07Z",
     id: "080155df097248",
-    instance_id: "01K4SR42ZPDHHCN70QNZKVPK48",
+    instance-id: "01K4SR42ZPDHHCN70QNZKVPK48",
     name: "machine",
     state: "started",
     region: Region::Ams,
-    host_status: HostStatus::Ok,
+    host-status: HostStatus::Ok,
 }

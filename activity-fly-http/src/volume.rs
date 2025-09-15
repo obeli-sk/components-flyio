@@ -228,6 +228,8 @@ impl crate::exports::obelisk_flyio::activity_fly_http::volumes::Guest for Compon
 
 #[cfg(test)]
 mod tests {
+    use crate::exports::obelisk_flyio::activity_fly_http::volumes::Volume;
+
     use super::ser::VolumeSer;
     use insta::assert_debug_snapshot;
 
@@ -259,6 +261,7 @@ mod tests {
         }
         "#;
         let volume: VolumeSer = serde_json::from_str(json).unwrap();
+        let volume = Volume::from(volume);
         assert_debug_snapshot!(volume)
     }
 }

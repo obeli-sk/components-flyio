@@ -654,7 +654,7 @@ impl Guest for Component {
 mod tests {
     use super::ser::ResponseErrorSer;
     use crate::{
-        exports::obelisk_flyio::activity_fly_http::machines::Region,
+        exports::obelisk_flyio::activity_fly_http::machines::{Machine, Region},
         machine::ser::{MachineSer, ToLowerWrapper},
     };
     use insta::assert_debug_snapshot;
@@ -742,6 +742,7 @@ mod tests {
           }
         "#;
         let machine: MachineSer = serde_json::from_str(json).unwrap();
+        let machine = Machine::from(machine);
         assert_debug_snapshot!(machine)
     }
 }
