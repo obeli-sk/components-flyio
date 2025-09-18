@@ -7,7 +7,7 @@ Activity that uses the official [Machines API](https://docs.machines.dev/) to in
 * Volumes
 * Secrets
 
-Check out the [WIT definition](activity-fly-http/wit/obelisk-flyio_activity-fly-http@1.0.0-beta/fly.wit).
+Check out the [WIT definition](activity/fly-http/wit/obelisk-flyio_activity-fly-http@1.0.0-beta/fly.wit).
 
 ## webhook-fly-secrets-updater
 Webhook endpoint for creating and updating secret values in a fly.io App.

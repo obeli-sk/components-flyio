@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "activity-fly-http",
+    "activity/fly-http/impl",
     "webhook-fly-secrets-updater",
 ]
 

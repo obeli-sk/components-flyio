@@ -1,5 +1,5 @@
 build:
-	(cd activity-fly-http && cargo build --release)
+	(cd activity/fly-http/impl && cargo build --release)
 	(cd webhook-fly-secrets-updater && cargo build --release)
 
 serve:

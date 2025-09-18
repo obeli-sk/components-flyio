@@ -1,0 +1,5 @@
+package any:any;
+
+world any {
+    include obelisk-flyio:activity-fly-http/exports@1.0.0-beta;
+}
