@@ -6,6 +6,8 @@ interface apps {
   use obelisk:types/time@2.0.0.{schedule-at};
   use obelisk-flyio:activity-fly-http/apps@1.0.0-beta.{app};
 
+  get-schedule: func(schedule-at: schedule-at, app-name: string) -> execution-id;
+
   put-schedule: func(schedule-at: schedule-at, org-slug: string, app-name: string) -> execution-id;
 
   list-schedule: func(schedule-at: schedule-at, org-slug: string) -> execution-id;
@@ -35,6 +37,8 @@ interface machines {
   use obelisk-flyio:activity-fly-http/machines@1.0.0-beta.{region, volume-id, machine-id, machine-state, host-status, mount, cpu-kind, guest-config, restart-policy, machine-restart, init-config, stop-config, exec-response, service-protocol, port-handler, port-config, service-config, machine-config, machine};
 
   list-schedule: func(schedule-at: schedule-at, app-name: string) -> execution-id;
+
+  get-schedule: func(schedule-at: schedule-at, app-name: string, machine-id: machine-id) -> execution-id;
 
   create-schedule: func(schedule-at: schedule-at, app-name: string, machine-name: string, machine-config: machine-config, region: option<region>) -> execution-id;
 

@@ -1,10 +1,32 @@
 use crate::exports::obelisk_flyio::activity_fly_http::apps;
-use crate::{API_BASE_URL, request_with_api_token};
+use crate::{API_BASE_URL, AppSlug, OrgSlug, request_with_api_token};
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use wstd::http::request::JsonRequest as _;
 use wstd::http::{Client, Method, StatusCode};
 use wstd::runtime::block_on;
+
+async fn get(app_name: AppSlug) -> Result<Option<apps::App>, anyhow::Error> {
+    let request = request_with_api_token()?
+        .method(Method::GET)
+        .uri(format!("{API_BASE_URL}/apps/{app_name}"))
+        .body(wstd::io::empty())?;
+    let mut response = Client::new().send(request).await?;
+
+    if response.status().is_success() {
+        let app: apps::App = response.body_mut().json().await?;
+        Ok(Some(app))
+    } else if response.status() == StatusCode::NOT_FOUND {
+        Ok(None)
+    } else {
+        let error_status = response.status();
+        let error_body = response.body_mut().bytes().await?;
+        Err(anyhow!(
+            "failed with status {error_status}: {}",
+            String::from_utf8_lossy(&error_body)
+        ))
+    }
+}
 
 async fn put(org_slug: String, app_name: String) -> Result<apps::App, anyhow::Error> {
     let client = Client::new();
@@ -99,7 +121,6 @@ async fn list(org_slug: String) -> Result<Vec<apps::App>, anyhow::Error> {
         .method(Method::GET)
         .uri(format!("{API_BASE_URL}/apps?org_slug={org_slug}"))
         .body(wstd::io::empty())?;
-
     let mut response = Client::new().send(request).await?;
 
     if response.status().is_success() {
@@ -143,14 +164,18 @@ async fn delete(app_name: String, force: bool) -> Result<(), anyhow::Error> {
 }
 
 impl apps::Guest for crate::Component {
-    /// Idempotently create a new fly.io app.
-    /// If the app creation fails, check if the app already exists in the correct
-    /// organization, otherwise return with an error.
+    fn get(app_name: String) -> Result<Option<apps::App>, String> {
+        (|| {
+            let app_slug = AppSlug::new(app_name)?;
+            block_on(get(app_slug))
+        })()
+        .map_err(|err| err.to_string())
+    }
+
     fn put(org_slug: String, app_name: String) -> Result<apps::App, String> {
         block_on(put(org_slug, app_name)).map_err(|err| err.to_string())
     }
 
-    /// List all fly.io apps in an organization.
     fn list(org_slug: String) -> Result<Vec<apps::App>, String> {
         block_on(list(org_slug)).map_err(|err| err.to_string())
     }

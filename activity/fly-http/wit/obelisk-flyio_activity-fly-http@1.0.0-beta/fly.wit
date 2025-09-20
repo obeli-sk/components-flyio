@@ -8,7 +8,13 @@ interface apps {
         id: string,
     }
 
+    /// Get app details if the app exists.
+    get: func(app-name: string) -> result<option<app>, string>;
+
     /// Idempotently create a new fly.io app.
+    /// If the app creation fails, check if the app already exists in the correct
+    /// organization, otherwise return with an error.
+    ///
     /// Using "personal" alias for org-slug works but will return an error on retry: "already exists but belongs to different organization"
     put: func(org-slug: string, app-name: string) -> result<app, string>;
 

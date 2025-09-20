@@ -88,8 +88,20 @@ MACHINE_ID=$(obelisk client execution submit -f --json obelisk-flyio:activity-fl
 | jq -r '.[-1].ok.ok')
 ```
 
+Get the VM:
+```sh
+obelisk client execution submit -f obelisk-flyio:activity-fly-http/machines@1.0.0-beta.get -- \
+\"$FLY_APP_NAME\" \"$MACHINE_ID\"
+```
+
 Delete the VM:
 ```sh
 obelisk client execution submit -f obelisk-flyio:activity-fly-http/machines@1.0.0-beta.delete -- \
 \"$FLY_APP_NAME\" \"$MACHINE_ID\" true
+```
+
+Delete the App:
+```sh
+obelisk client execution submit -f obelisk-flyio:activity-fly-http/apps@1.0.0-beta.delete -- \
+\"$FLY_APP_NAME\" true
 ```

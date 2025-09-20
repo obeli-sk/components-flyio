@@ -5,6 +5,14 @@ interface apps {
   use obelisk:types/execution@2.0.0.{execution-id, join-set-id, await-next-extension-error, get-extension-error, execution-failed};
   use obelisk-flyio:activity-fly-http/apps@1.0.0-beta.{app};
 
+  get-submit: func(join-set-id: borrow<join-set-id>, app-name: string) -> execution-id;
+
+  get-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<option<app>, string>>, await-next-extension-error>;
+
+  get-get: func(execution-id: execution-id) -> result<result<option<app>, string>, get-extension-error>;
+
+  get-invoke: func(app-name: string) -> result<result<option<app>, string>, execution-failed>;
+
   put-submit: func(join-set-id: borrow<join-set-id>, org-slug: string, app-name: string) -> execution-id;
 
   put-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<app, string>>, await-next-extension-error>;
@@ -86,6 +94,14 @@ interface machines {
   list-get: func(execution-id: execution-id) -> result<result<list<machine>, string>, get-extension-error>;
 
   list-invoke: func(app-name: string) -> result<result<list<machine>, string>, execution-failed>;
+
+  get-submit: func(join-set-id: borrow<join-set-id>, app-name: string, machine-id: machine-id) -> execution-id;
+
+  get-await-next: func(join-set-id: borrow<join-set-id>) -> result<tuple<execution-id, result<option<machine>, string>>, await-next-extension-error>;
+
+  get-get: func(execution-id: execution-id) -> result<result<option<machine>, string>, get-extension-error>;
+
+  get-invoke: func(app-name: string, machine-id: machine-id) -> result<result<option<machine>, string>, execution-failed>;
 
   create-submit: func(join-set-id: borrow<join-set-id>, app-name: string, machine-name: string, machine-config: machine-config, region: option<region>) -> execution-id;
 
