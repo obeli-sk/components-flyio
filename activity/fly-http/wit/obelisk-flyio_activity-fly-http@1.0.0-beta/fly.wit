@@ -154,6 +154,8 @@ interface machines {
     /// List machines
     %list: func(app-name: string) -> result<list<machine>, string>;
 
+    get: func(app-name: string, machine-id: machine-id) -> result<option<machine>, string>;
+
     /// Create and start a machine under `app-name` with name `machine-name` and return its ID.
     /// If machine already exists, attributes of `machine-config` are not updated, just the machine ID is returned.
     create: func(app-name: string, machine-name: string, machine-config: machine-config, region: option<region>) -> result<string, string>;

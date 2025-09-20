@@ -337,6 +337,32 @@ async fn list(app_name: String) -> Result<Vec<Machine>, anyhow::Error> {
     }
 }
 
+async fn get(app_name: String, machine_id: String) -> Result<Option<Machine>, anyhow::Error> {
+    let url = format!("{API_BASE_URL}/apps/{app_name}/machines/{machine_id}");
+    let request = request_with_api_token()?
+        .method(Method::GET)
+        .uri(url)
+        .body(wstd::io::empty())?;
+    let response = Client::new().send(request).await?;
+    if response.status().is_success() {
+        let response = response.into_body().bytes().await?;
+        let response: MachineSer = serde_json::from_slice(&response).inspect_err(|_| {
+            eprintln!("cannot deserialize: {}", String::from_utf8_lossy(&response))
+        })?;
+        Ok(Some(Machine::from(response)))
+    } else if response.status() == StatusCode::NOT_FOUND {
+        Ok(None)
+    } else {
+        let error_status = response.status();
+        let error_body = response.into_body().bytes().await?;
+        eprintln!("Got error status {error_status}");
+        Err(anyhow!(
+            "failed with status {error_status}: {}",
+            String::from_utf8_lossy(&error_body)
+        ))
+    }
+}
+
 async fn create(
     app_name: String,
     machine_name: String,
@@ -500,6 +526,10 @@ async fn send_request(url: String, method: Method) -> Result<(), anyhow::Error> 
 impl Guest for Component {
     fn list(app_name: String) -> Result<Vec<Machine>, String> {
         block_on(list(app_name)).map_err(|err| err.to_string())
+    }
+
+    fn get(app_name: String, machine_id: String) -> Result<Option<Machine>, String> {
+        block_on(get(app_name, machine_id)).map_err(|err| err.to_string())
     }
 
     fn create(
