@@ -33,7 +33,7 @@ impl<T> SafeUrlPart<T> {
         if s.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
             Ok(SafeUrlPart {
                 value: s,
-                _phantom_data: PhantomData::default(),
+                _phantom_data: PhantomData,
             })
         } else {
             bail!("illegal slug")
