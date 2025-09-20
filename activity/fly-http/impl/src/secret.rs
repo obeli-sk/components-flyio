@@ -1,11 +1,11 @@
 use crate::exports::obelisk_flyio::activity_fly_http::secrets;
-use crate::{API_BASE_URL, request_with_api_token};
+use crate::{API_BASE_URL, AppName, SecretKey, request_with_api_token};
 use anyhow::anyhow;
 use serde::Deserialize;
 use wstd::http::{Client, Method};
 use wstd::runtime::block_on;
 
-async fn list_secrets(app_name: String) -> Result<Vec<secrets::Secret>, anyhow::Error> {
+async fn list_secrets(app_name: AppName) -> Result<Vec<secrets::Secret>, anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(format!("{API_BASE_URL}/apps/{app_name}/secrets"))
@@ -28,7 +28,7 @@ async fn list_secrets(app_name: String) -> Result<Vec<secrets::Secret>, anyhow::
     }
 }
 
-async fn delete_secret(app_name: String, secret_name: String) -> Result<(), anyhow::Error> {
+async fn delete_secret(app_name: AppName, secret_name: SecretKey) -> Result<(), anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::DELETE)
         .uri(format!(
@@ -53,11 +53,20 @@ async fn delete_secret(app_name: String, secret_name: String) -> Result<(), anyh
 impl secrets::Guest for crate::Component {
     /// List all secrets for a given app.
     fn list(app_name: String) -> Result<Vec<secrets::Secret>, String> {
-        block_on(list_secrets(app_name)).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            block_on(list_secrets(app_name))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     /// Delete a secret from a given app.
     fn delete(app_name: String, secret_name: String) -> Result<(), String> {
-        block_on(delete_secret(app_name, secret_name)).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let secret_name = SecretKey::new(secret_name)?;
+            block_on(delete_secret(app_name, secret_name))
+        })()
+        .map_err(|err| err.to_string())
     }
 }

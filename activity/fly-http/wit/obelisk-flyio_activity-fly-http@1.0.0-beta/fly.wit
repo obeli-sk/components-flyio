@@ -67,6 +67,7 @@ interface machines {
     record machine-config {
         image: string,
         guest: option<guest-config>,
+        /// Destroy the VM after first exec
         auto-destroy: option<bool>,
         init: option<init-config>,
         env: option<list<tuple<string, string>>>,

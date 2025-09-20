@@ -1,12 +1,12 @@
 use crate::exports::obelisk_flyio::activity_fly_http::apps;
-use crate::{API_BASE_URL, AppSlug, OrgSlug, request_with_api_token};
+use crate::{API_BASE_URL, AppName, OrgSlug, request_with_api_token};
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use wstd::http::request::JsonRequest as _;
 use wstd::http::{Client, Method, StatusCode};
 use wstd::runtime::block_on;
 
-async fn get(app_name: AppSlug) -> Result<Option<apps::App>, anyhow::Error> {
+async fn get(app_name: AppName) -> Result<Option<apps::App>, anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(format!("{API_BASE_URL}/apps/{app_name}"))
@@ -28,7 +28,7 @@ async fn get(app_name: AppSlug) -> Result<Option<apps::App>, anyhow::Error> {
     }
 }
 
-async fn put(org_slug: String, app_name: String) -> Result<apps::App, anyhow::Error> {
+async fn put(org_slug: OrgSlug, app_name: AppName) -> Result<apps::App, anyhow::Error> {
     let client = Client::new();
 
     // Attempt to create the app
@@ -39,8 +39,8 @@ async fn put(org_slug: String, app_name: String) -> Result<apps::App, anyhow::Er
     }
 
     let request_body = CreateAppRequest {
-        app_name: &app_name,
-        org_slug: &org_slug,
+        app_name: app_name.as_ref(),
+        org_slug: org_slug.as_ref(),
     };
 
     let post_request = request_with_api_token()?
@@ -57,7 +57,7 @@ async fn put(org_slug: String, app_name: String) -> Result<apps::App, anyhow::Er
         }
         let app_response: AppResponse = response.body_mut().json().await?;
         return Ok(apps::App {
-            name: app_name,
+            name: app_name.to_string(),
             id: app_response.id,
         });
     }
@@ -91,7 +91,7 @@ async fn put(org_slug: String, app_name: String) -> Result<apps::App, anyhow::Er
             let app_details: AppDetails = get_response.body_mut().json().await?;
 
             // Verify the organization slug matches
-            if app_details.organization.slug == org_slug {
+            if app_details.organization.slug == org_slug.as_ref() {
                 // Idempotency success: App exists and is in the correct org.
                 return Ok(apps::App {
                     id: app_details.id,
@@ -116,7 +116,7 @@ async fn put(org_slug: String, app_name: String) -> Result<apps::App, anyhow::Er
     ))
 }
 
-async fn list(org_slug: String) -> Result<Vec<apps::App>, anyhow::Error> {
+async fn list(org_slug: OrgSlug) -> Result<Vec<apps::App>, anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(format!("{API_BASE_URL}/apps?org_slug={org_slug}"))
@@ -140,7 +140,7 @@ async fn list(org_slug: String) -> Result<Vec<apps::App>, anyhow::Error> {
     }
 }
 
-async fn delete(app_name: String, force: bool) -> Result<(), anyhow::Error> {
+async fn delete(app_name: AppName, force: bool) -> Result<(), anyhow::Error> {
     let mut url = format!("{API_BASE_URL}/apps/{app_name}");
     if force {
         url.push_str("?force=true");
@@ -166,21 +166,34 @@ async fn delete(app_name: String, force: bool) -> Result<(), anyhow::Error> {
 impl apps::Guest for crate::Component {
     fn get(app_name: String) -> Result<Option<apps::App>, String> {
         (|| {
-            let app_slug = AppSlug::new(app_name)?;
-            block_on(get(app_slug))
+            let app_name = AppName::new(app_name)?;
+            block_on(get(app_name))
         })()
         .map_err(|err| err.to_string())
     }
 
     fn put(org_slug: String, app_name: String) -> Result<apps::App, String> {
-        block_on(put(org_slug, app_name)).map_err(|err| err.to_string())
+        (|| {
+            let org_slug = OrgSlug::new(org_slug)?;
+            let app_name = AppName::new(app_name)?;
+            block_on(put(org_slug, app_name))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn list(org_slug: String) -> Result<Vec<apps::App>, String> {
-        block_on(list(org_slug)).map_err(|err| err.to_string())
+        (|| {
+            let org_slug = OrgSlug::new(org_slug)?;
+            block_on(list(org_slug))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn delete(app_name: String, force: bool) -> Result<(), String> {
-        block_on(delete(app_name, force)).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            block_on(delete(app_name, force))
+        })()
+        .map_err(|err| err.to_string())
     }
 }

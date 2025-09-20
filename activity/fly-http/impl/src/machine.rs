@@ -5,7 +5,7 @@ use crate::obelisk_flyio::activity_fly_http::regions::Region;
 
 use crate::machine::ser::MachineSer;
 use crate::serde::KebabWrapper;
-use crate::{API_BASE_URL, Component, request_with_api_token};
+use crate::{API_BASE_URL, AppName, Component, MachineId, request_with_api_token};
 use anyhow::{Context, anyhow, bail, ensure};
 use ser::{
     ExecResponseSer, MachineConfigSer, MachineCreateRequestSer, MachineCreateResponseSer,
@@ -313,7 +313,7 @@ pub(crate) mod ser {
     }
 }
 
-async fn list(app_name: String) -> Result<Vec<Machine>, anyhow::Error> {
+async fn list(app_name: AppName) -> Result<Vec<Machine>, anyhow::Error> {
     let url = format!("{API_BASE_URL}/apps/{app_name}/machines");
     let request = request_with_api_token()?
         .method(Method::GET)
@@ -337,7 +337,7 @@ async fn list(app_name: String) -> Result<Vec<Machine>, anyhow::Error> {
     }
 }
 
-async fn get(app_name: String, machine_id: String) -> Result<Option<Machine>, anyhow::Error> {
+async fn get(app_name: AppName, machine_id: MachineId) -> Result<Option<Machine>, anyhow::Error> {
     let url = format!("{API_BASE_URL}/apps/{app_name}/machines/{machine_id}");
     let request = request_with_api_token()?
         .method(Method::GET)
@@ -364,7 +364,7 @@ async fn get(app_name: String, machine_id: String) -> Result<Option<Machine>, an
 }
 
 async fn create(
-    app_name: String,
+    app_name: AppName,
     machine_name: String,
     machine_config: MachineConfig,
     region: Option<Region>,
@@ -420,8 +420,8 @@ async fn create(
 }
 
 async fn update(
-    app_name: String,
-    machine_id: String,
+    app_name: AppName,
+    machine_id: MachineId,
     machine_config: MachineConfig,
     region: Option<Region>,
 ) -> Result<(), anyhow::Error> {
@@ -449,7 +449,7 @@ async fn update(
                     )
                 })?;
             ensure!(
-                resp.id == machine_id,
+                resp.id == machine_id.as_ref(),
                 "unexpected id returned, expected {machine_id} got {id}",
                 id = resp.id
             );
@@ -462,8 +462,8 @@ async fn update(
 }
 
 async fn exec(
-    app_name: String,
-    machine_id: String,
+    app_name: AppName,
+    machine_id: MachineId,
     command: Vec<String>,
 ) -> Result<ExecResponse, anyhow::Error> {
     let url = format!("{API_BASE_URL}/apps/{app_name}/machines/{machine_id}/exec");
@@ -493,12 +493,21 @@ async fn exec(
 }
 
 async fn change_machine(
-    app_name: String,
-    machine_id: String,
+    app_name: AppName,
+    machine_id: MachineId,
     url_suffix: &'static str,
 ) -> Result<(), anyhow::Error> {
     let url = format!("{API_BASE_URL}/apps/{app_name}/machines/{machine_id}/{url_suffix}");
     send_request(url, Method::POST).await
+}
+
+async fn delete(
+    app_name: AppName,
+    machine_id: MachineId,
+    force: bool,
+) -> Result<(), anyhow::Error> {
+    let url = format!("{API_BASE_URL}/apps/{app_name}/machines/{machine_id}?force={force}");
+    send_request(url, Method::DELETE).await
 }
 
 async fn send_request(url: String, method: Method) -> Result<(), anyhow::Error> {
@@ -514,7 +523,6 @@ async fn send_request(url: String, method: Method) -> Result<(), anyhow::Error> 
     } else {
         let error_status = response.status();
         let error_body = response.into_body().bytes().await?;
-        eprintln!("Got error status {error_status}");
         Err(anyhow!(
             "failed with status {error_status}: {}",
             String::from_utf8_lossy(&error_body)
@@ -525,11 +533,20 @@ async fn send_request(url: String, method: Method) -> Result<(), anyhow::Error> 
 // Implementation of the vm interface for the component.
 impl Guest for Component {
     fn list(app_name: String) -> Result<Vec<Machine>, String> {
-        block_on(list(app_name)).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            block_on(list(app_name))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn get(app_name: String, machine_id: String) -> Result<Option<Machine>, String> {
-        block_on(get(app_name, machine_id)).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let machine_id = MachineId::new(machine_id)?;
+            block_on(get(app_name, machine_id))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn create(
@@ -538,8 +555,11 @@ impl Guest for Component {
         machine_config: MachineConfig,
         region: Option<Region>,
     ) -> Result<String, String> {
-        block_on(create(app_name, machine_name, machine_config, region))
-            .map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            block_on(create(app_name, machine_name, machine_config, region))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn update(
@@ -548,29 +568,57 @@ impl Guest for Component {
         machine_config: MachineConfig,
         region: Option<Region>,
     ) -> Result<(), String> {
-        block_on(update(app_name, machine_id, machine_config, region))
-            .map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let machine_id = MachineId::new(machine_id)?;
+            block_on(update(app_name, machine_id, machine_config, region))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn stop(app_name: String, machine_id: String) -> Result<(), String> {
-        block_on(change_machine(app_name, machine_id, "stop")).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let machine_id = MachineId::new(machine_id)?;
+            block_on(change_machine(app_name, machine_id, "stop"))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn suspend(app_name: String, machine_id: String) -> Result<(), String> {
-        block_on(change_machine(app_name, machine_id, "suspend")).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let machine_id = MachineId::new(machine_id)?;
+            block_on(change_machine(app_name, machine_id, "suspend"))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn start(app_name: String, machine_id: String) -> Result<(), String> {
-        block_on(change_machine(app_name, machine_id, "start")).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let machine_id = MachineId::new(machine_id)?;
+            block_on(change_machine(app_name, machine_id, "start"))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn restart(app_name: String, machine_id: String) -> Result<(), String> {
-        block_on(change_machine(app_name, machine_id, "restart")).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let machine_id = MachineId::new(machine_id)?;
+            block_on(change_machine(app_name, machine_id, "restart"))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn delete(app_name: String, machine_id: String, force: bool) -> Result<(), String> {
-        let url = format!("{API_BASE_URL}/apps/{app_name}/machines/{machine_id}?force={force}");
-        block_on(send_request(url, Method::DELETE)).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let machine_id = MachineId::new(machine_id)?;
+            block_on(delete(app_name, machine_id, force))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn exec(
@@ -578,7 +626,12 @@ impl Guest for Component {
         machine_id: String,
         command: Vec<String>,
     ) -> Result<ExecResponse, String> {
-        block_on(exec(app_name, machine_id, command)).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let machine_id = MachineId::new(machine_id)?;
+            block_on(exec(app_name, machine_id, command))
+        })()
+        .map_err(|err| err.to_string())
     }
 }
 

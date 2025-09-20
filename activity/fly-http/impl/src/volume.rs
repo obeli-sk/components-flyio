@@ -1,6 +1,6 @@
 use crate::exports::obelisk_flyio::activity_fly_http::volumes::{Volume, VolumeCreateRequest};
 use crate::serde::KebabWrapper;
-use crate::{API_BASE_URL, Component, request_with_api_token};
+use crate::{API_BASE_URL, AppName, Component, VolumeId, request_with_api_token};
 use anyhow::{Context, anyhow, bail};
 use ser::{VolumeCreateRequestSer, VolumeSer};
 use wstd::http::request::JsonRequest;
@@ -68,7 +68,7 @@ pub(crate) mod ser {
     }
 }
 
-async fn list(app_name: String) -> Result<Vec<Volume>, anyhow::Error> {
+async fn list(app_name: AppName) -> Result<Vec<Volume>, anyhow::Error> {
     let url = format!("{API_BASE_URL}/apps/{app_name}/volumes");
     let request = request_with_api_token()?
         .method(Method::GET)
@@ -96,7 +96,7 @@ async fn list(app_name: String) -> Result<Vec<Volume>, anyhow::Error> {
     }
 }
 
-async fn create(app_name: String, request: VolumeCreateRequest) -> Result<Volume, anyhow::Error> {
+async fn create(app_name: AppName, request: VolumeCreateRequest) -> Result<Volume, anyhow::Error> {
     let fly_request = VolumeCreateRequestSer {
         name: request.name,
         size_gb: request.size_gb,
@@ -127,7 +127,7 @@ async fn create(app_name: String, request: VolumeCreateRequest) -> Result<Volume
     }
 }
 
-async fn get(app_name: String, volume_id: String) -> Result<Volume, anyhow::Error> {
+async fn get(app_name: AppName, volume_id: VolumeId) -> Result<Volume, anyhow::Error> {
     let url = format!("{API_BASE_URL}/apps/{app_name}/volumes/{volume_id}");
     let request = request_with_api_token()?
         .method(Method::GET)
@@ -154,7 +154,7 @@ async fn get(app_name: String, volume_id: String) -> Result<Volume, anyhow::Erro
     }
 }
 
-async fn delete(app_name: String, volume_id: String) -> Result<(), anyhow::Error> {
+async fn delete(app_name: AppName, volume_id: VolumeId) -> Result<(), anyhow::Error> {
     let url = format!("{API_BASE_URL}/apps/{app_name}/volumes/{volume_id}");
     let request = request_with_api_token()?
         .method(Method::DELETE)
@@ -176,8 +176,8 @@ async fn delete(app_name: String, volume_id: String) -> Result<(), anyhow::Error
 }
 
 async fn extend(
-    app_name: String,
-    volume_id: String,
+    app_name: AppName,
+    volume_id: VolumeId,
     new_size_gb: u32,
 ) -> Result<(), anyhow::Error> {
     let url = format!("{API_BASE_URL}/apps/{app_name}/volumes/{volume_id}/extend");
@@ -206,23 +206,46 @@ async fn extend(
 // Implementation of the volumes interface for the component.
 impl crate::exports::obelisk_flyio::activity_fly_http::volumes::Guest for Component {
     fn list(app_name: String) -> Result<Vec<Volume>, String> {
-        block_on(list(app_name)).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            block_on(list(app_name))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn create(app_name: String, request: VolumeCreateRequest) -> Result<Volume, String> {
-        block_on(create(app_name, request)).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            block_on(create(app_name, request))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn get(app_name: String, volume_id: String) -> Result<Volume, String> {
-        block_on(get(app_name, volume_id)).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let volume_id = VolumeId::new(volume_id)?;
+            block_on(get(app_name, volume_id))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn delete(app_name: String, volume_id: String) -> Result<(), String> {
-        block_on(delete(app_name, volume_id)).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let volume_id = VolumeId::new(volume_id)?;
+            block_on(delete(app_name, volume_id))
+        })()
+        .map_err(|err| err.to_string())
     }
 
     fn extend(app_name: String, volume_id: String, new_size_gb: u32) -> Result<(), String> {
-        block_on(extend(app_name, volume_id, new_size_gb)).map_err(|err| err.to_string())
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let volume_id = VolumeId::new(volume_id)?;
+            block_on(extend(app_name, volume_id, new_size_gb))
+        })()
+        .map_err(|err| err.to_string())
     }
 }
 

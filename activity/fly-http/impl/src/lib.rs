@@ -24,16 +24,14 @@ fn request_with_api_token() -> Result<request::Builder, anyhow::Error> {
 
 #[derive(derive_more::Display)]
 #[display("{value}")]
-struct SlugOf<T> {
+struct SafeUrlPart<T> {
     value: String,
     _phantom_data: PhantomData<T>,
 }
-impl<T> SlugOf<T> {
-    fn new(s: String) -> Result<SlugOf<T>, anyhow::Error> {
-        if s.chars()
-            .all(|c| c.is_ascii_lowercase() || c.is_numeric() || c == '-')
-        {
-            Ok(SlugOf {
+impl<T> SafeUrlPart<T> {
+    fn new(s: String) -> Result<SafeUrlPart<T>, anyhow::Error> {
+        if s.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+            Ok(SafeUrlPart {
                 value: s,
                 _phantom_data: PhantomData::default(),
             })
@@ -42,8 +40,19 @@ impl<T> SlugOf<T> {
         }
     }
 }
+impl<T> AsRef<str> for SafeUrlPart<T> {
+    fn as_ref(&self) -> &str {
+        &self.value
+    }
+}
 
 struct AppMarker;
-type AppSlug = SlugOf<AppMarker>;
+type AppName = SafeUrlPart<AppMarker>;
 struct OrgMarker;
-type OrgSlug = SlugOf<OrgMarker>;
+type OrgSlug = SafeUrlPart<OrgMarker>;
+struct SecretKeyMarker;
+type SecretKey = SafeUrlPart<SecretKeyMarker>;
+struct VolumeIdMarker;
+type VolumeId = SafeUrlPart<VolumeIdMarker>;
+struct MachineIdMarker;
+type MachineId = SafeUrlPart<MachineIdMarker>;
