@@ -1,5 +1,5 @@
 ---
-source: activity-fly-http/src/machine.rs
+source: activity/fly-http/impl/src/machine.rs
 expression: machine
 ---
 Machine {
@@ -48,7 +48,7 @@ Machine {
     id: "080155df097248",
     instance-id: "01K4SR42ZPDHHCN70QNZKVPK48",
     name: "machine",
-    state: "started",
+    state: MachineState::Started,
     region: Region::Ams,
     host-status: HostStatus::Ok,
 }
