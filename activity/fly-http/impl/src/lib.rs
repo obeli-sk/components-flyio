@@ -3,6 +3,7 @@ mod machine;
 mod secret;
 mod volume;
 mod generated {
+    #![allow(clippy::empty_line_after_outer_attr)]
     include!(concat!(env!("OUT_DIR"), "/generated.rs"));
 }
 

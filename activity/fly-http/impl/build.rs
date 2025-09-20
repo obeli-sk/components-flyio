@@ -6,12 +6,14 @@ use wit_parser::Resolve;
 fn main() -> Result<()> {
     println!("cargo:rerun-if-changed=wit/");
 
-    let mut opts = Opts::default();
-    opts.generate_all = true;
-    opts.additional_derive_attributes = vec![
-        "serde::Serialize".to_string(),
-        "serde::Deserialize".to_string(),
-    ];
+    let opts = Opts {
+        generate_all: true,
+        additional_derive_attributes: vec![
+            "serde::Serialize".to_string(),
+            "serde::Deserialize".to_string(),
+        ],
+        ..Default::default()
+    };
     let mut generator = opts.build();
     let mut resolve = Resolve::default();
     let (pkg, _files) = resolve.push_path("wit")?;
