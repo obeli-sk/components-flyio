@@ -1,177 +1,41 @@
-use crate::exports::obelisk_flyio::activity_fly_http::machines::{
+use crate::generated::exports::obelisk_flyio::activity_fly_http::machines::{
     ExecResponse, Guest, Machine, MachineConfig,
 };
-use crate::obelisk_flyio::activity_fly_http::regions::Region;
-
-use crate::machine::ser::MachineSer;
-use crate::serde::KebabWrapper;
+use crate::generated::obelisk_flyio::activity_fly_http::regions::Region;
 use crate::{API_BASE_URL, AppName, Component, MachineId, request_with_api_token};
 use anyhow::{Context, anyhow, bail, ensure};
 use ser::{
-    ExecResponseSer, MachineConfigSer, MachineCreateRequestSer, MachineCreateResponseSer,
-    MachineUpdateRequestSer, ResponseErrorSer,
+    ExecResponseSer, MachineCreateRequestSer, MachineCreateResponseSer, MachineUpdateRequestSer,
+    ResponseErrorSer,
 };
 use wstd::http::request::JsonRequest;
 use wstd::http::{Client, Method, StatusCode};
 use wstd::runtime::block_on;
 
-// These structs are internal implementation details. They are designed to serialize
-// into the exact JSON format expected by the Fly.io Machines API.
 pub(crate) mod ser {
-    use crate::exports::obelisk_flyio::activity_fly_http::machines::{
-        CpuKind, ExecResponse, GuestConfig, HostStatus, InitConfig, Machine, MachineConfig,
-        MachineRestart, Mount, PortConfig, PortHandler, RestartPolicy, ServiceConfig,
-        ServiceProtocol, StopConfig,
+    use crate::generated::exports::obelisk_flyio::activity_fly_http::machines::{
+        ExecResponse, MachineConfig,
     };
-    use crate::obelisk_flyio::activity_fly_http::regions::Region;
-    use crate::serde::KebabWrapper;
+    use crate::generated::obelisk_flyio::activity_fly_http::regions::Region;
     use serde::{Deserialize, Serialize};
-    use std::collections::HashMap;
 
     #[derive(Serialize, Debug)]
     pub(crate) struct MachineCreateRequestSer {
         pub(crate) name: String,
-        pub(crate) config: MachineConfigSer,
-        pub(crate) region: Option<KebabWrapper<Region>>,
+        pub(crate) config: MachineConfig,
+        pub(crate) region: Option<Region>,
     }
 
     #[derive(Serialize, Debug)]
     pub(crate) struct MachineUpdateRequestSer {
-        pub(crate) config: MachineConfigSer,
-        pub(crate) region: Option<KebabWrapper<Region>>,
-    }
-
-    #[derive(Deserialize, Debug)]
-    pub(crate) struct MachineSer {
-        config: MachineConfigSer,
-        created_at: String,
-        updated_at: String,
-        id: String,
-        instance_id: String,
-        name: String,
-        state: String,
-        region: KebabWrapper<Region>,
-        host_status: KebabWrapper<HostStatus>,
-    }
-    impl From<MachineSer> for Machine {
-        fn from(value: MachineSer) -> Machine {
-            Machine {
-                config: MachineConfig::from(value.config),
-                created_at: value.created_at,
-                updated_at: value.updated_at,
-                id: value.id,
-                instance_id: value.instance_id,
-                name: value.name,
-                state: value.state,
-                region: value.region.0,
-                host_status: value.host_status.0,
-            }
-        }
-    }
-
-    #[derive(Serialize, Deserialize, Debug)]
-    pub(crate) struct MachineConfigSer {
-        image: String,
-        guest: Option<GuestConfigSer>,
-        auto_destroy: Option<bool>,
-        init: Option<InitConfigSer>,
-        env: Option<HashMap<String, String>>,
-        restart: Option<MachineRestartSer>,
-        stop_config: Option<StopConfig>,
-        mounts: Option<Vec<Mount>>,
-        services: Option<Vec<ServiceConfigSer>>,
-    }
-
-    #[derive(Serialize, Deserialize, Debug)]
-    pub(crate) struct GuestConfigSer {
-        cpu_kind: Option<CpuKindWrapper>,
-        cpus: Option<u64>,
-        memory_mb: Option<u64>,
-        kernel_args: Option<Vec<String>>,
-    }
-
-    type CpuKindWrapper = KebabWrapper<CpuKind>;
-
-    impl From<CpuKindWrapper> for CpuKind {
-        fn from(value: CpuKindWrapper) -> CpuKind {
-            value.0
-        }
-    }
-
-    #[derive(Serialize, Deserialize, Debug)]
-    pub(crate) struct InitConfigSer {
-        cmd: Option<Vec<String>>,
-        entrypoint: Option<Vec<String>>,
-        exec: Option<Vec<String>>,
-        kernel_args: Option<Vec<String>>,
-        swap_size_mb: Option<u64>,
-        tty: Option<bool>,
-    }
-
-    #[derive(Serialize, Deserialize, Debug)]
-    pub(crate) struct MachineRestartSer {
-        max_retries: Option<u32>,
-        policy: RestartPolicyWrapper,
-    }
-
-    type RestartPolicyWrapper = KebabWrapper<RestartPolicy>;
-    impl From<RestartPolicyWrapper> for RestartPolicy {
-        fn from(value: RestartPolicyWrapper) -> RestartPolicy {
-            value.0
-        }
+        pub(crate) config: MachineConfig,
+        pub(crate) region: Option<Region>,
     }
 
     #[derive(Serialize, Deserialize, Debug)]
     pub(crate) struct MountSer {
         volume: String,
         path: String,
-    }
-
-    #[derive(Debug, Serialize, Deserialize)]
-    pub(crate) struct PortConfigSer {
-        port: u16,
-        handlers: Vec<KebabWrapper<PortHandler>>,
-    }
-    impl From<PortConfig> for PortConfigSer {
-        fn from(wit: PortConfig) -> Self {
-            PortConfigSer {
-                port: wit.port,
-                handlers: wit.handlers.into_iter().map(KebabWrapper).collect(),
-            }
-        }
-    }
-    impl From<PortConfigSer> for PortConfig {
-        fn from(ser: PortConfigSer) -> PortConfig {
-            PortConfig {
-                port: ser.port,
-                handlers: ser.handlers.into_iter().map(|wrapper| wrapper.0).collect(),
-            }
-        }
-    }
-
-    #[derive(Debug, Serialize, Deserialize)]
-    pub(crate) struct ServiceConfigSer {
-        internal_port: u16,
-        protocol: KebabWrapper<ServiceProtocol>,
-        ports: Vec<PortConfigSer>,
-    }
-    impl From<ServiceConfig> for ServiceConfigSer {
-        fn from(wit: ServiceConfig) -> Self {
-            ServiceConfigSer {
-                internal_port: wit.internal_port,
-                protocol: KebabWrapper(wit.protocol),
-                ports: wit.ports.into_iter().map(PortConfigSer::from).collect(),
-            }
-        }
-    }
-    impl From<ServiceConfigSer> for ServiceConfig {
-        fn from(ser: ServiceConfigSer) -> ServiceConfig {
-            ServiceConfig {
-                internal_port: ser.internal_port,
-                protocol: ser.protocol.0,
-                ports: ser.ports.into_iter().map(PortConfig::from).collect(),
-            }
-        }
     }
 
     #[derive(Deserialize)]
@@ -215,102 +79,6 @@ pub(crate) mod ser {
             }
         }
     }
-
-    impl From<MachineConfig> for MachineConfigSer {
-        fn from(wit: MachineConfig) -> MachineConfigSer {
-            // Copy the list of environment variable tuples.
-            let env = wit.env.map(|vec| vec.into_iter().collect());
-
-            // Transform the guest config.
-            let guest = wit.guest.map(|g| GuestConfigSer {
-                cpu_kind: g.cpu_kind.map(|cpu_kind_wit| cpu_kind_wit.into()),
-                cpus: g.cpus,
-                memory_mb: g.memory_mb,
-                kernel_args: g.kernel_args,
-            });
-
-            // Transform the restart policy.
-            let restart = wit.restart.map(|r| MachineRestartSer {
-                max_retries: r.max_retries,
-                policy: r.policy.into(),
-            });
-
-            // Transform the init config.
-            let init = wit.init.map(|i| InitConfigSer {
-                cmd: i.cmd,
-                entrypoint: i.entrypoint,
-                exec: i.exec,
-                kernel_args: i.kernel_args,
-                swap_size_mb: i.swap_size_mb,
-                tty: i.tty,
-            });
-
-            MachineConfigSer {
-                image: wit.image,
-                auto_destroy: wit.auto_destroy,
-                env,
-                guest,
-                restart,
-                init,
-                stop_config: wit.stop_config,
-                mounts: wit.mounts,
-                services: wit
-                    .services
-                    .map(|vec| vec.into_iter().map(ServiceConfigSer::from).collect()),
-            }
-        }
-    }
-
-    impl From<MachineConfigSer> for MachineConfig {
-        fn from(ser: MachineConfigSer) -> MachineConfig {
-            // Revert the environment variable tuple list back to a Vec<Option<(String, String)>>.
-            let env = ser.env.map(|vec| vec.into_iter().collect());
-
-            // Revert the guest config.
-            let guest = ser.guest.map(|g| GuestConfig {
-                cpu_kind: g.cpu_kind.map(|cpu_kind_ser| cpu_kind_ser.into()),
-                cpus: g.cpus,
-                memory_mb: g.memory_mb,
-                kernel_args: g.kernel_args,
-            });
-
-            // Revert the restart policy.
-            let restart = ser.restart.map(|r| MachineRestart {
-                max_retries: r.max_retries,
-                policy: r.policy.into(),
-            });
-
-            // Revert the init config.
-            let init = ser.init.map(|i| InitConfig {
-                cmd: i.cmd,
-                entrypoint: i.entrypoint,
-                exec: i.exec,
-                kernel_args: i.kernel_args,
-                swap_size_mb: i.swap_size_mb,
-                tty: i.tty,
-            });
-
-            // Revert the stop config.
-            let stop_config = ser.stop_config.map(|s| StopConfig {
-                signal: s.signal,
-                timeout: s.timeout,
-            });
-
-            MachineConfig {
-                image: ser.image,
-                auto_destroy: ser.auto_destroy,
-                env,
-                guest,
-                restart,
-                init,
-                stop_config,
-                mounts: ser.mounts,
-                services: ser
-                    .services
-                    .map(|vec| vec.into_iter().map(ServiceConfig::from).collect()),
-            }
-        }
-    }
 }
 
 async fn list(app_name: AppName) -> Result<Vec<Machine>, anyhow::Error> {
@@ -322,10 +90,10 @@ async fn list(app_name: AppName) -> Result<Vec<Machine>, anyhow::Error> {
     let response = Client::new().send(request).await?;
     if response.status().is_success() {
         let response = response.into_body().bytes().await?;
-        let response: Vec<MachineSer> = serde_json::from_slice(&response).inspect_err(|_| {
+        let response: Vec<Machine> = serde_json::from_slice(&response).inspect_err(|_| {
             eprintln!("cannot deserialize: {}", String::from_utf8_lossy(&response))
         })?;
-        Ok(response.into_iter().map(Machine::from).collect())
+        Ok(response)
     } else {
         let error_status = response.status();
         let error_body = response.into_body().bytes().await?;
@@ -346,10 +114,10 @@ async fn get(app_name: AppName, machine_id: MachineId) -> Result<Option<Machine>
     let response = Client::new().send(request).await?;
     if response.status().is_success() {
         let response = response.into_body().bytes().await?;
-        let response: MachineSer = serde_json::from_slice(&response).inspect_err(|_| {
+        let response: Machine = serde_json::from_slice(&response).inspect_err(|_| {
             eprintln!("cannot deserialize: {}", String::from_utf8_lossy(&response))
         })?;
-        Ok(Some(Machine::from(response)))
+        Ok(Some(response))
     } else if response.status() == StatusCode::NOT_FOUND {
         Ok(None)
     } else {
@@ -370,11 +138,9 @@ async fn create(
     region: Option<Region>,
 ) -> Result<String, anyhow::Error> {
     {
-        let region = region.map(KebabWrapper);
-        let fly_config = MachineConfigSer::from(machine_config);
         let request_payload = MachineCreateRequestSer {
             name: machine_name,
-            config: fly_config,
+            config: machine_config,
             region,
         };
         let url = format!("{API_BASE_URL}/apps/{app_name}/machines");
@@ -426,8 +192,6 @@ async fn update(
     region: Option<Region>,
 ) -> Result<(), anyhow::Error> {
     {
-        let region = region.map(KebabWrapper);
-        let machine_config = MachineConfigSer::from(machine_config);
         let request_payload = MachineUpdateRequestSer {
             config: machine_config,
             region,
@@ -638,28 +402,21 @@ impl Guest for Component {
 #[cfg(test)]
 mod tests {
     use super::ser::ResponseErrorSer;
-    use crate::{
-        exports::obelisk_flyio::activity_fly_http::machines::{Machine, Region},
-        machine::ser::MachineSer,
-        serde::KebabWrapper,
+    use crate::generated::{
+        exports::obelisk_flyio::activity_fly_http::machines::Machine,
+        obelisk_flyio::activity_fly_http::regions::Region,
     };
     use insta::assert_debug_snapshot;
     use serde_json::json;
 
     #[test]
     fn region_ser() {
-        assert_eq!(
-            "\"ams\"",
-            serde_json::to_string(&KebabWrapper(Region::Ams)).unwrap()
-        );
+        assert_eq!("\"ams\"", serde_json::to_string(&Region::Ams).unwrap());
     }
 
     #[test]
     fn region_de() {
-        assert_matches::assert_matches!(
-            serde_json::from_str("\"ams\"").unwrap(),
-            KebabWrapper(Region::Ams)
-        );
+        assert_matches::assert_matches!(serde_json::from_str("\"ams\"").unwrap(), Region::Ams);
     }
 
     #[test]
@@ -727,8 +484,7 @@ mod tests {
             "host_status": "ok"
           }
         "#;
-        let machine: MachineSer = serde_json::from_str(json).unwrap();
-        let machine = Machine::from(machine);
+        let machine: Machine = serde_json::from_str(json).unwrap();
         assert_debug_snapshot!(machine)
     }
 }

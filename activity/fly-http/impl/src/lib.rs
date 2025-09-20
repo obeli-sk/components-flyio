@@ -1,21 +1,21 @@
 mod app;
 mod machine;
 mod secret;
-mod serde;
 mod volume;
-
-use std::marker::PhantomData;
+mod generated {
+    include!(concat!(env!("OUT_DIR"), "/generated.rs"));
+}
 
 use anyhow::{Context, bail};
-use wit_bindgen::generate;
+use generated::export;
+use std::marker::PhantomData;
 use wstd::http::{Request, request};
 
 const API_BASE_URL: &str = "https://api.machines.dev/v1";
 const FLY_API_TOKEN: &str = "FLY_API_TOKEN";
 
-generate!({ generate_all, additional_derives: [serde::Deserialize, serde::Serialize] });
 struct Component;
-export!(Component);
+export!(Component with_types_in generated);
 
 fn request_with_api_token() -> Result<request::Builder, anyhow::Error> {
     let api_token = std::env::var(FLY_API_TOKEN).context("cannot obtain `FLY_API_TOKEN`")?;

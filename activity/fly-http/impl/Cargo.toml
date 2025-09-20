@@ -22,3 +22,9 @@ wstd.workspace = true
 [dev-dependencies]
 assert_matches.workspace = true
 insta.workspace = true
+
+[build-dependencies]
+anyhow.workspace = true
+regex.workspace = true
+wit-bindgen-rust.workspace = true
+wit-parser.workspace = true

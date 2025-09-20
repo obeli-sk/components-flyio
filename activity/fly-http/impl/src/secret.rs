@@ -1,4 +1,4 @@
-use crate::exports::obelisk_flyio::activity_fly_http::secrets;
+use crate::generated::exports::obelisk_flyio::activity_fly_http::secrets;
 use crate::{API_BASE_URL, AppName, SecretKey, request_with_api_token};
 use anyhow::anyhow;
 use serde::Deserialize;

@@ -1,72 +1,11 @@
-use crate::exports::obelisk_flyio::activity_fly_http::volumes::{Volume, VolumeCreateRequest};
-use crate::serde::KebabWrapper;
+use crate::generated::exports::obelisk_flyio::activity_fly_http::volumes::{
+    Volume, VolumeCreateRequest,
+};
 use crate::{API_BASE_URL, AppName, Component, VolumeId, request_with_api_token};
 use anyhow::{Context, anyhow, bail};
-use ser::{VolumeCreateRequestSer, VolumeSer};
 use wstd::http::request::JsonRequest;
 use wstd::http::{Client, Method};
 use wstd::runtime::block_on;
-
-// These structs are internal implementation details. They are designed to serialize
-// into the exact JSON format expected by the Fly.io Volumes API.
-pub(crate) mod ser {
-    use crate::serde::KebabWrapper;
-    use crate::{
-        exports::obelisk_flyio::activity_fly_http::volumes::Volume,
-        obelisk_flyio::activity_fly_http::regions::Region,
-    };
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Serialize, Debug)]
-    pub(crate) struct VolumeCreateRequestSer {
-        pub(crate) name: String,
-        pub(crate) size_gb: u32,
-        pub(crate) region: KebabWrapper<Region>,
-        #[serde(rename = "require_unique_zone")]
-        pub(crate) require_unique_zone: Option<bool>,
-    }
-
-    #[derive(Deserialize, Debug)]
-    pub(crate) struct VolumeSer {
-        pub(crate) id: String,
-        pub(crate) name: String,
-        pub(crate) state: String,
-        pub(crate) region: KebabWrapper<Region>,
-        pub(crate) size_gb: u32,
-        pub(crate) encrypted: bool,
-        pub(crate) attached_machine_id: Option<String>,
-        pub(crate) host_status: String,
-        pub(crate) created_at: String,
-        pub(crate) blocks: u32,
-        pub(crate) block_size: u32,
-        pub(crate) blocks_free: u32,
-        pub(crate) blocks_avail: u32,
-        pub(crate) bytes_used: u32,
-        pub(crate) bytes_total: u32,
-    }
-
-    impl From<VolumeSer> for Volume {
-        fn from(value: VolumeSer) -> Volume {
-            Volume {
-                id: value.id,
-                name: value.name,
-                state: value.state,
-                region: value.region.0,
-                size_gb: value.size_gb,
-                encrypted: value.encrypted,
-                attached_machine_id: value.attached_machine_id,
-                host_status: value.host_status,
-                created_at: value.created_at,
-                blocks: value.blocks,
-                block_size: value.block_size,
-                blocks_free: value.blocks_free,
-                blocks_avail: value.blocks_avail,
-                bytes_used: value.bytes_used,
-                bytes_total: value.bytes_total,
-            }
-        }
-    }
-}
 
 async fn list(app_name: AppName) -> Result<Vec<Volume>, anyhow::Error> {
     let url = format!("{API_BASE_URL}/apps/{app_name}/volumes");
@@ -78,14 +17,13 @@ async fn list(app_name: AppName) -> Result<Vec<Volume>, anyhow::Error> {
 
     if response.status().is_success() {
         let response_body = response.into_body().bytes().await?;
-        let response_ser: Vec<VolumeSer> =
-            serde_json::from_slice(&response_body).inspect_err(|_| {
-                eprintln!(
-                    "cannot deserialize: {}",
-                    String::from_utf8_lossy(&response_body)
-                )
-            })?;
-        Ok(response_ser.into_iter().map(Volume::from).collect())
+        let response: Vec<Volume> = serde_json::from_slice(&response_body).inspect_err(|_| {
+            eprintln!(
+                "cannot deserialize: {}",
+                String::from_utf8_lossy(&response_body)
+            )
+        })?;
+        Ok(response)
     } else {
         let error_status = response.status();
         let error_body = response.into_body().bytes().await?;
@@ -97,29 +35,23 @@ async fn list(app_name: AppName) -> Result<Vec<Volume>, anyhow::Error> {
 }
 
 async fn create(app_name: AppName, request: VolumeCreateRequest) -> Result<Volume, anyhow::Error> {
-    let fly_request = VolumeCreateRequestSer {
-        name: request.name,
-        size_gb: request.size_gb,
-        region: KebabWrapper(request.region),
-        require_unique_zone: request.require_unique_zone,
-    };
     let url = format!("{API_BASE_URL}/apps/{app_name}/volumes");
     let http_request = request_with_api_token()?
         .method(Method::POST)
         .uri(url)
-        .json(&fly_request)?;
+        .json(&request)?;
 
     let response = Client::new().send(http_request).await?;
 
     if response.status().is_success() {
         let response_body = response.into_body().bytes().await?;
-        let volume_ser: VolumeSer = serde_json::from_slice(&response_body).with_context(|| {
+        let volume: Volume = serde_json::from_slice(&response_body).with_context(|| {
             format!(
                 "Deserialization of response failed: `{}`",
                 String::from_utf8_lossy(&response_body)
             )
         })?;
-        Ok(Volume::from(volume_ser))
+        Ok(volume)
     } else {
         let error_status = response.status();
         let error_body = response.into_body().bytes().await?;
@@ -137,13 +69,13 @@ async fn get(app_name: AppName, volume_id: VolumeId) -> Result<Volume, anyhow::E
 
     if response.status().is_success() {
         let response_body = response.into_body().bytes().await?;
-        let volume_ser: VolumeSer = serde_json::from_slice(&response_body).inspect_err(|_| {
+        let volume: Volume = serde_json::from_slice(&response_body).inspect_err(|_| {
             eprintln!(
                 "cannot deserialize: {}",
                 String::from_utf8_lossy(&response_body)
             )
         })?;
-        Ok(Volume::from(volume_ser))
+        Ok(volume)
     } else {
         let error_status = response.status();
         let error_body = response.into_body().bytes().await?;
@@ -204,7 +136,7 @@ async fn extend(
 }
 
 // Implementation of the volumes interface for the component.
-impl crate::exports::obelisk_flyio::activity_fly_http::volumes::Guest for Component {
+impl crate::generated::exports::obelisk_flyio::activity_fly_http::volumes::Guest for Component {
     fn list(app_name: String) -> Result<Vec<Volume>, String> {
         (|| {
             let app_name = AppName::new(app_name)?;
@@ -251,9 +183,7 @@ impl crate::exports::obelisk_flyio::activity_fly_http::volumes::Guest for Compon
 
 #[cfg(test)]
 mod tests {
-    use crate::exports::obelisk_flyio::activity_fly_http::volumes::Volume;
-
-    use super::ser::VolumeSer;
+    use crate::generated::exports::obelisk_flyio::activity_fly_http::volumes::Volume;
     use insta::assert_debug_snapshot;
 
     #[test]
@@ -283,8 +213,7 @@ mod tests {
             "host_dedication_key": ""
         }
         "#;
-        let volume: VolumeSer = serde_json::from_str(json).unwrap();
-        let volume = Volume::from(volume);
+        let volume: Volume = serde_json::from_str(json).unwrap();
         assert_debug_snapshot!(volume)
     }
 }
