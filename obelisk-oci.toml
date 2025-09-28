@@ -1,0 +1,27 @@
+api.listening_addr = "127.0.0.1:5005"
+webui.listening_addr = "127.0.0.1:8080"
+
+[log.stdout]
+enabled = true
+
+[[activity_wasm]]
+name = "activity_fly_http"
+location.oci = "docker.io/getobelisk/components_flyio_activity_fly_http:2025-09-28@sha256:41d1e9af0a0ef46b182f459e5113f224aa9cb29af197a8d841f8a1845d708ae6"
+max_retries = 0
+exec.lock_expiry.seconds = 15
+env_vars = ["FLY_API_TOKEN"]
+forward_stdout = "stderr"
+forward_stderr = "stderr"
+
+[[webhook_endpoint]]
+name = "webhook_fly_secrets_updater"
+location.oci = "docker.io/getobelisk/components_flyio_webhook_fly_secrets_updater:2025-09-28@sha256:ce78a2bcf3c47ca7409fba65a666f81397479985b0b1796bb06cbe5a6c98dc06"
+http_server = "webhook_server"
+routes = [{ methods = ["POST"], route = "/" }]
+env_vars = ["FLY_API_TOKEN"]
+forward_stdout = "stderr"
+forward_stderr = "stderr"
+
+[[http_server]]
+name = "webhook_server"
+listening_addr = "0.0.0.0:9090"
