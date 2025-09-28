@@ -32,12 +32,6 @@ pub(crate) mod ser {
         pub(crate) region: Option<Region>,
     }
 
-    #[derive(Serialize, Deserialize, Debug)]
-    pub(crate) struct MountSer {
-        volume: String,
-        path: String,
-    }
-
     #[derive(Deserialize)]
     pub(crate) struct MachineCreateResponseSer {
         pub(crate) id: String,
