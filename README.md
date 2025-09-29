@@ -72,7 +72,7 @@ export VOLUME_ID=$(obelisk client execution submit -f --json obelisk-flyio:activ
       "name": "my_app_vol",
       "region": "ams",
       "size-gb": 1
-    }' | jq -r '.[-1].ok.ok.id')
+    }' | jq -r '.[-1].ok.id')
 ```
 
 Delete the volume:
@@ -85,7 +85,7 @@ Launch a VM:
 ```sh
 MACHINE_ID=$(obelisk client execution submit -f --json obelisk-flyio:activity-fly-http/machines@1.0.0-beta.create -- \
 \"$FLY_APP_NAME\" \"$FLY_MACHINE_NAME\" "$(./scripts/fly-http-machine-config.json.sh)" \"$FLY_REGION\" \
-| jq -r '.[-1].ok.ok')
+| jq -r '.[-1].ok')
 ```
 
 Get the VM:
