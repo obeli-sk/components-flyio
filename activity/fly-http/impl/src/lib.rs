@@ -31,14 +31,16 @@ struct SafeUrlPart<T> {
 }
 impl<T> SafeUrlPart<T> {
     fn new(s: String) -> Result<SafeUrlPart<T>, anyhow::Error> {
-        if s.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
-            Ok(SafeUrlPart {
-                value: s,
-                _phantom_data: PhantomData,
-            })
-        } else {
-            bail!("illegal slug")
+        if let Some(illegal) = s
+            .chars()
+            .find(|c| !c.is_ascii_alphanumeric() && *c != '-' && *c != '_')
+        {
+            bail!("illegal character: {}", illegal);
         }
+        Ok(SafeUrlPart {
+            value: s,
+            _phantom_data: PhantomData,
+        })
     }
 }
 impl<T> AsRef<str> for SafeUrlPart<T> {
