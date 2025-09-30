@@ -151,7 +151,9 @@ async fn delete(app_name: AppName, force: bool) -> Result<(), anyhow::Error> {
         .body(wstd::io::empty())?;
 
     let response = Client::new().send(request).await?;
-    if response.status().is_success() {
+    let status = response.status();
+    // Idempotency: If app was already deleted, treat it a success.
+    if status.is_success() || status == StatusCode::NOT_FOUND {
         Ok(())
     } else {
         let error_status = response.status();
