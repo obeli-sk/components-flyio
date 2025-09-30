@@ -30,6 +30,8 @@ just build serve
 ### Submit activity executions
 Executions can be submitted and observed either using CLI or the WebUI at http://localhost:8080 .
 
+#### Apps
+
 List apps:
 ```sh
 obelisk client execution submit -f obelisk-flyio:activity-fly-http/apps@1.0.0-beta.list -- \
@@ -42,6 +44,32 @@ obelisk client execution submit -f obelisk-flyio:activity-fly-http/apps@1.0.0-be
 \"$FLY_ORG_SLUG\" \"$FLY_APP_NAME\"
 ```
 
+Delete the app:
+```sh
+obelisk client execution submit -f obelisk-flyio:activity-fly-http/apps@1.0.0-beta.delete -- \
+\"$FLY_APP_NAME\" true
+```
+
+#### IPs
+
+List IPs:
+```sh
+obelisk client execution submit -f obelisk-flyio:activity-fly-http/ips@1.0.0-beta.list -- \
+\"$FLY_APP_NAME\"
+```
+Allocate an IP:
+```sh
+IP=$(obelisk client execution submit -f --json obelisk-flyio:activity-fly-http/ips@1.0.0-beta.allocate -- \
+\"$FLY_APP_NAME\" '{ "config":{ "ipv6": {"region": null} } }' | jq -r '.[-1].ok' )
+```
+Release an IP:
+```sh
+obelisk client execution submit -f obelisk-flyio:activity-fly-http/ips@1.0.0-beta.release -- \
+\"$FLY_APP_NAME\" \"$IP\"
+```
+
+#### Secrets
+
 List secret keys of the app:
 ```sh
 obelisk client execution submit -f  obelisk-flyio:activity-fly-http/secrets@1.0.0-beta.list -- \
@@ -52,12 +80,7 @@ Insert or update a secret (note this is a webhook endpoint to avoid persisting t
 ```sh
 curl -v localhost:9090/ -X POST -d '{"app_name":"'$FLY_APP_NAME'","name":"foo","value":"bar"}'
 ```
-
-List VMs:
-```sh
-obelisk client execution submit -f obelisk-flyio:activity-fly-http/machines@1.0.0-beta.list -- \
-\"$FLY_APP_NAME\"
-```
+#### Volumes
 
 List volumes:
 ```sh
@@ -81,6 +104,14 @@ obelisk client execution submit -f obelisk-flyio:activity-fly-http/volumes@1.0.0
 \"$FLY_APP_NAME\" \"$VOLUME_ID\"
 ```
 
+#### VMs
+
+List VMs:
+```sh
+obelisk client execution submit -f obelisk-flyio:activity-fly-http/machines@1.0.0-beta.list -- \
+\"$FLY_APP_NAME\"
+```
+
 Launch a VM:
 ```sh
 MACHINE_ID=$(obelisk client execution submit -f --json obelisk-flyio:activity-fly-http/machines@1.0.0-beta.create -- \
@@ -98,10 +129,4 @@ Delete the VM:
 ```sh
 obelisk client execution submit -f obelisk-flyio:activity-fly-http/machines@1.0.0-beta.delete -- \
 \"$FLY_APP_NAME\" \"$MACHINE_ID\" true
-```
-
-Delete the App:
-```sh
-obelisk client execution submit -f obelisk-flyio:activity-fly-http/apps@1.0.0-beta.delete -- \
-\"$FLY_APP_NAME\" true
 ```

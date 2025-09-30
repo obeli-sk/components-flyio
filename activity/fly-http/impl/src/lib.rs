@@ -1,4 +1,5 @@
 mod app;
+mod ips;
 mod machine;
 mod secret;
 mod volume;
