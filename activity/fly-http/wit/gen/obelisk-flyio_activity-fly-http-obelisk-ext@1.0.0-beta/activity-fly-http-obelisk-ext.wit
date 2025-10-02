@@ -203,13 +203,13 @@ interface ips {
 
   type ip-address = string;
 
-  allocate-submit: func(join-set: borrow<join-set>, app-name: string, request: ip-request) -> execution-id;
+  allocate-unsafe-submit: func(join-set: borrow<join-set>, app-name: string, request: ip-request) -> execution-id;
 
-  allocate-await-next: func(join-set: borrow<join-set>) -> result<tuple<execution-id, result<ip-address, string>>, await-next-extension-error>;
+  allocate-unsafe-await-next: func(join-set: borrow<join-set>) -> result<tuple<execution-id, result<ip-address, string>>, await-next-extension-error>;
 
-  allocate-get: func(execution-id: execution-id) -> result<result<ip-address, string>, get-extension-error>;
+  allocate-unsafe-get: func(execution-id: execution-id) -> result<result<ip-address, string>, get-extension-error>;
 
-  allocate-invoke: func(label: string, app-name: string, request: ip-request) -> result<result<ip-address, string>, invoke-extension-error>;
+  allocate-unsafe-invoke: func(label: string, app-name: string, request: ip-request) -> result<result<ip-address, string>, invoke-extension-error>;
 
   list-submit: func(join-set: borrow<join-set>, app-name: string) -> execution-id;
 

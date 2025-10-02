@@ -59,7 +59,7 @@ obelisk client execution submit -f obelisk-flyio:activity-fly-http/ips@1.0.0-bet
 ```
 Allocate an IP:
 ```sh
-IP=$(obelisk client execution submit -f --json obelisk-flyio:activity-fly-http/ips@1.0.0-beta.allocate -- \
+IP=$(obelisk client execution submit -f --json obelisk-flyio:activity-fly-http/ips@1.0.0-beta.allocate-unsafe -- \
 \"$FLY_APP_NAME\" '{ "config":{ "ipv6": {"region": null} } }' | jq -r '.[-1].ok' )
 ```
 Release an IP:

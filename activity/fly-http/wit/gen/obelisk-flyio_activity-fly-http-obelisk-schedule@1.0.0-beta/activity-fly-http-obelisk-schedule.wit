@@ -82,7 +82,7 @@ interface ips {
 
   type ip-address = string;
 
-  allocate-schedule: func(schedule-at: schedule-at, app-name: string, request: ip-request) -> execution-id;
+  allocate-unsafe-schedule: func(schedule-at: schedule-at, app-name: string, request: ip-request) -> execution-id;
 
   list-schedule: func(schedule-at: schedule-at, app-name: string) -> execution-id;
 

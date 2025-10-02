@@ -172,7 +172,10 @@ where
 }
 
 impl ips::Guest for crate::Component {
-    fn allocate(app_name: String, request: ips::IpRequest) -> Result<ips::IpAddress, String> {
+    fn allocate_unsafe(
+        app_name: String,
+        request: ips::IpRequest,
+    ) -> Result<ips::IpAddress, String> {
         (|| {
             let app_name = AppName::new(app_name)?;
             block_on(allocate_ip(app_name, request))
