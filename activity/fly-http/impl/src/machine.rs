@@ -391,6 +391,26 @@ impl Guest for Component {
         })()
         .map_err(|err| err.to_string())
     }
+
+    fn exec_check_success(
+        app_name: String,
+        machine_id: String,
+        command: Vec<String>,
+    ) -> Result<ExecResponse, String> {
+        (|| {
+            let app_name = AppName::new(app_name)?;
+            let machine_id = MachineId::new(machine_id)?;
+            block_on(async {
+                let resp = exec(app_name, machine_id, command).await?;
+                if resp.exit_code == Some(0) {
+                    Ok(resp)
+                } else {
+                    bail!("non-successful exit status - {resp:?}")
+                }
+            })
+        })()
+        .map_err(|err| err.to_string())
+    }
 }
 
 #[cfg(test)]
