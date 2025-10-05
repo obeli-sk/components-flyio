@@ -173,6 +173,14 @@ interface machines {
   exec-get: func(execution-id: execution-id) -> result<result<exec-response, string>, get-extension-error>;
 
   exec-invoke: func(label: string, app-name: string, machine-id: machine-id, command: list<string>) -> result<result<exec-response, string>, invoke-extension-error>;
+
+  exec-check-success-submit: func(join-set: borrow<join-set>, app-name: string, machine-id: machine-id, command: list<string>) -> execution-id;
+
+  exec-check-success-await-next: func(join-set: borrow<join-set>) -> result<tuple<execution-id, result<exec-response, string>>, await-next-extension-error>;
+
+  exec-check-success-get: func(execution-id: execution-id) -> result<result<exec-response, string>, get-extension-error>;
+
+  exec-check-success-invoke: func(label: string, app-name: string, machine-id: machine-id, command: list<string>) -> result<result<exec-response, string>, invoke-extension-error>;
 }
 
 interface secrets {

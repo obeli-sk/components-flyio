@@ -62,6 +62,8 @@ interface machines {
   delete-schedule: func(schedule-at: schedule-at, app-name: string, machine-id: machine-id, force: bool) -> execution-id;
 
   exec-schedule: func(schedule-at: schedule-at, app-name: string, machine-id: machine-id, command: list<string>) -> execution-id;
+
+  exec-check-success-schedule: func(schedule-at: schedule-at, app-name: string, machine-id: machine-id, command: list<string>) -> execution-id;
 }
 
 interface secrets {
