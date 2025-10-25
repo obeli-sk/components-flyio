@@ -22,10 +22,10 @@ insta = "1.43.2"
 regex = "1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-wit-bindgen = "0.46.0"
-wit-bindgen-rust = "0.46.0"
-wit-parser = "0.239.0"
 wstd = "0.5.6"
+wit-bindgen = "0.47.0"
+wit-bindgen-rust = "0.47.0"
+wit-parser = "0.240.0"
 
 [profile.release]
 opt-level = "s"
