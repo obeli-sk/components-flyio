@@ -1,5 +1,7 @@
+use std::collections::HashSet;
+
 use crate::generated::exports::obelisk_flyio::activity_fly_http::ips::{
-    self, Ipv4Config, Ipv6Config,
+    self, IpVariant, Ipv4Config, Ipv6Config,
 };
 use crate::generated::obelisk_flyio::activity_fly_http::regions::Region;
 use crate::{API_BASE_URL, AppName, request_with_api_token};
@@ -8,7 +10,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use wstd::http::{Body, Client, Method, StatusCode};
 use wstd::runtime::block_on;
 
-async fn allocate_ip(app_name: AppName, request: ips::IpRequest) -> Result<String, anyhow::Error> {
+async fn allocate_ip(app_name: &AppName, config: &IpVariant) -> Result<String, anyhow::Error> {
     #[derive(Serialize)]
     #[serde(rename_all = "snake_case")]
     enum FlyIpType {
@@ -25,16 +27,16 @@ async fn allocate_ip(app_name: AppName, request: ips::IpRequest) -> Result<Strin
         region: Option<Region>,
     }
 
-    let (ip_type, region) = match request.config {
+    let (ip_type, region) = match config {
         ips::IpVariant::Ipv4(Ipv4Config {
             shared: false,
             region,
-        }) => (FlyIpType::V4, region),
+        }) => (FlyIpType::V4, *region),
         ips::IpVariant::Ipv4(Ipv4Config {
             shared: true,
             region,
-        }) => (FlyIpType::SharedV4, region),
-        ips::IpVariant::Ipv6(Ipv6Config { region }) => (FlyIpType::V6, region),
+        }) => (FlyIpType::SharedV4, *region),
+        ips::IpVariant::Ipv6(Ipv6Config { region }) => (FlyIpType::V6, *region),
         ips::IpVariant::Ipv6Private => (FlyIpType::PrivateV6, None),
     };
 
@@ -65,7 +67,7 @@ async fn allocate_ip(app_name: AppName, request: ips::IpRequest) -> Result<Strin
     }
 }
 
-async fn list_ips(app_name: AppName) -> Result<Vec<ips::IpDetail>, anyhow::Error> {
+async fn list_ips(app_name: &AppName) -> Result<Vec<ips::IpDetail>, anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(format!("{API_BASE_URL}/apps/{app_name}/ip_assignments"))
@@ -123,7 +125,7 @@ async fn list_ips(app_name: AppName) -> Result<Vec<ips::IpDetail>, anyhow::Error
     }
 }
 
-async fn release_ip(app_name: AppName, ip: String) -> Result<(), anyhow::Error> {
+async fn release_ip(app_name: &AppName, ip: &str) -> Result<(), anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::DELETE)
         .uri(format!(
@@ -167,14 +169,35 @@ where
     }
 }
 
+async fn allocate_ip_idempotently(
+    app_name: AppName,
+    config: ips::IpVariant,
+    pre_existing: Vec<ips::IpDetail>,
+) -> Result<String, anyhow::Error> {
+    let allocated = allocate_ip(&app_name, &config).await?;
+    let mut expected: HashSet<_> = pre_existing.into_iter().map(|detail| detail.ip).collect();
+    expected.insert(allocated.clone());
+
+    let post_existing: HashSet<_> = list_ips(&app_name)
+        .await?
+        .into_iter()
+        .map(|detail| detail.ip)
+        .collect();
+    for redundant in post_existing.symmetric_difference(&expected) {
+        release_ip(&app_name, redundant).await?;
+    }
+    Ok(allocated)
+}
+
 impl ips::Guest for crate::Component {
-    fn allocate_unsafe(
+    fn allocate(
         app_name: String,
-        request: ips::IpRequest,
+        config: ips::IpVariant,
+        pre_existing: Vec<ips::IpDetail>,
     ) -> Result<ips::IpAddress, String> {
         (|| {
             let app_name = AppName::new(app_name)?;
-            block_on(allocate_ip(app_name, request))
+            block_on(allocate_ip_idempotently(app_name, config, pre_existing))
         })()
         .map_err(|err| err.to_string())
     }
@@ -182,7 +205,7 @@ impl ips::Guest for crate::Component {
     fn list(app_name: String) -> Result<Vec<ips::IpDetail>, String> {
         (|| {
             let app_name = AppName::new(app_name)?;
-            block_on(list_ips(app_name))
+            block_on(async move { list_ips(&app_name).await })
         })()
         .map_err(|err| err.to_string())
     }
@@ -190,7 +213,7 @@ impl ips::Guest for crate::Component {
     fn release(app_name: String, ip: ips::IpAddress) -> Result<(), String> {
         (|| {
             let app_name = AppName::new(app_name)?;
-            block_on(release_ip(app_name, ip))
+            block_on(async move { release_ip(&app_name, &ip).await })
         })()
         .map_err(|err| err.to_string())
     }

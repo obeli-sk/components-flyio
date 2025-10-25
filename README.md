@@ -59,8 +59,8 @@ obelisk client execution submit -f .../ips.list -- \
 ```
 Allocate an IP:
 ```sh
-IP=$(obelisk client execution submit -f --json .../ips.allocate-unsafe -- \
-\"$FLY_APP_NAME\" '{ "config":{ "ipv6": {"region": null} } }' | jq -r '.[-1].ok' )
+IP=$(obelisk client execution submit -f --json .../ips.allocate -- \
+\"$FLY_APP_NAME\" '{ "ipv6": {"region": null} }' '[]' | jq -r '.[-1].ok' )
 ```
 Release an IP:
 ```sh
