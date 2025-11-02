@@ -5,8 +5,7 @@ use crate::generated::obelisk_flyio::activity_fly_http::regions::Region;
 use crate::{API_BASE_URL, AppName, request_with_api_token};
 use anyhow::anyhow;
 use serde::{Deserialize, Deserializer, Serialize};
-use wstd::http::request::JsonRequest;
-use wstd::http::{Client, Method, StatusCode};
+use wstd::http::{Body, Client, Method, StatusCode};
 use wstd::runtime::block_on;
 
 async fn allocate_ip(app_name: AppName, request: ips::IpRequest) -> Result<String, anyhow::Error> {
@@ -44,24 +43,25 @@ async fn allocate_ip(app_name: AppName, request: ips::IpRequest) -> Result<Strin
     let request = request_with_api_token()?
         .method(Method::POST)
         .uri(format!("{API_BASE_URL}/apps/{app_name}/ip_assignments"))
-        .json(&body)?;
+        .header("content-type", "application/json")
+        .body(Body::from_json(&body)?)?;
 
-    let mut response = Client::new().send(request).await?;
+    let response = Client::new().send(request).await?;
+    let resp_status = response.status();
+    let mut response = response.into_body();
+    let response = response.str_contents().await?;
 
-    if response.status().is_success() {
+    if resp_status.is_success() {
         #[derive(Deserialize)]
         struct AssignIpResponse {
             ip: String,
         }
-        let assign_response: AssignIpResponse = response.body_mut().json().await?;
-        Ok(assign_response.ip)
+
+        let response: AssignIpResponse = serde_json::from_str(response)
+            .inspect_err(|_| eprintln!("cannot deserialize: {response}"))?;
+        Ok(response.ip)
     } else {
-        let error_status = response.status();
-        let error_body = response.body_mut().bytes().await?;
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        Err(anyhow!("failed with status {resp_status}: {response}",))
     }
 }
 
@@ -69,7 +69,7 @@ async fn list_ips(app_name: AppName) -> Result<Vec<ips::IpDetail>, anyhow::Error
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(format!("{API_BASE_URL}/apps/{app_name}/ip_assignments"))
-        .body(wstd::io::empty())?;
+        .body(Body::empty())?;
 
     let mut response = Client::new().send(request).await?;
 
@@ -117,11 +117,9 @@ async fn list_ips(app_name: AppName) -> Result<Vec<ips::IpDetail>, anyhow::Error
         Ok(ip_details)
     } else {
         let error_status = response.status();
-        let error_body = response.body_mut().bytes().await?;
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        let mut response = response.into_body();
+        let error_body = response.str_contents().await?;
+        Err(anyhow!("failed with status {error_status}: {error_body}",))
     }
 }
 
@@ -131,7 +129,7 @@ async fn release_ip(app_name: AppName, ip: String) -> Result<(), anyhow::Error> 
         .uri(format!(
             "{API_BASE_URL}/apps/{app_name}/ip_assignments/{ip}"
         ))
-        .body(wstd::io::empty())?;
+        .body(Body::empty())?;
 
     let response = Client::new().send(request).await?;
 
@@ -143,11 +141,9 @@ async fn release_ip(app_name: AppName, ip: String) -> Result<(), anyhow::Error> 
             // Idempotency: if IP does not exist, return Ok, as this might be a retry.
             return Ok(());
         }
-        let error_body = response.into_body().bytes().await?;
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        let mut response = response.into_body();
+        let error_body = response.str_contents().await?;
+        Err(anyhow!("failed with status {error_status}: {error_body}",))
     }
 }
 

@@ -1,13 +1,11 @@
 use anyhow::{Context, anyhow};
 use serde::{Deserialize, Serialize};
-use wstd::http::body::IncomingBody;
-use wstd::http::server::{Finished, Responder};
+use wstd::http::body::Body;
+use wstd::http::{Client, Error, Request, Response, StatusCode};
 use wstd::http::{
-    Client, Method, Request,
-    request::{self, JsonRequest},
+    Method,
+    request::{self},
 };
-use wstd::http::{Response, StatusCode};
-use wstd::io::empty;
 
 const API_BASE_URL: &str = "https://api.machines.dev/v1";
 const FLY_API_TOKEN: &str = "FLY_API_TOKEN";
@@ -33,18 +31,18 @@ async fn put_secret(
         .uri(format!(
             "{API_BASE_URL}/apps/{app_name}/secrets/{secret_name}"
         ))
-        .json(&body)?;
+        .body(Body::from_json(&body)?)?;
 
-    let mut response = client.send(request).await?;
+    let response = client.send(request).await?;
 
     if response.status().is_success() {
         Ok(())
     } else {
         let error_status = response.status();
-        let error_body = response.body_mut().bytes().await?;
+        let mut response = response.into_body();
+        let error_body = response.str_contents().await?;
         Err(anyhow!(
-            "failed to put secret '{secret_name}' for app '{app_name}' with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
+            "failed to put secret '{secret_name}' for app '{app_name}' with status {error_status}: {error_body}",
         ))
     }
 }
@@ -57,16 +55,15 @@ struct Secret {
 }
 
 #[wstd::http_server]
-async fn main(request: Request<IncomingBody>, responder: Responder) -> Finished {
+async fn main(request: Request<Body>) -> Result<Response<Body>, Error> {
     // Must be configured as POST in obelisk.toml
-    assert_eq!(Method::POST, *request.method());
+    assert_eq!(Method::POST, request.method());
     let secret: Secret = request.into_body().json().await.unwrap();
     put_secret(secret.app_name, secret.name, secret.value)
         .await
         .unwrap();
-    let response = Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
-        .body(empty())
-        .unwrap();
-    responder.respond(response).await
+        .body(Body::empty())
+        .map_err(Error::from)
 }
