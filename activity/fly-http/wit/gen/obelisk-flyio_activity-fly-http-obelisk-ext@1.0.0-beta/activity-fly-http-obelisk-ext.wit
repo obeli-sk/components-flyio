@@ -206,18 +206,18 @@ interface secrets {
 
 interface ips {
   use obelisk-flyio:activity-fly-http/regions@1.0.0-beta.{region};
-  use obelisk-flyio:activity-fly-http/ips@1.0.0-beta.{ipv4-config, ipv6-config, ip-variant, ip-request, ip-detail};
+  use obelisk-flyio:activity-fly-http/ips@1.0.0-beta.{ipv4-config, ipv6-config, ip-variant, ip-detail};
   use obelisk:types/execution@3.0.0.{execution-id, join-set, await-next-extension-error, get-extension-error, invoke-extension-error};
 
   type ip-address = string;
 
-  allocate-unsafe-submit: func(join-set: borrow<join-set>, app-name: string, request: ip-request) -> execution-id;
+  allocate-submit: func(join-set: borrow<join-set>, app-name: string, config: ip-variant, pre-existing-ips: list<ip-detail>) -> execution-id;
 
-  allocate-unsafe-await-next: func(join-set: borrow<join-set>) -> result<tuple<execution-id, result<ip-address, string>>, await-next-extension-error>;
+  allocate-await-next: func(join-set: borrow<join-set>) -> result<tuple<execution-id, result<ip-address, string>>, await-next-extension-error>;
 
-  allocate-unsafe-get: func(execution-id: execution-id) -> result<result<ip-address, string>, get-extension-error>;
+  allocate-get: func(execution-id: execution-id) -> result<result<ip-address, string>, get-extension-error>;
 
-  allocate-unsafe-invoke: func(label: string, app-name: string, request: ip-request) -> result<result<ip-address, string>, invoke-extension-error>;
+  allocate-invoke: func(label: string, app-name: string, config: ip-variant, pre-existing-ips: list<ip-detail>) -> result<result<ip-address, string>, invoke-extension-error>;
 
   list-submit: func(join-set: borrow<join-set>, app-name: string) -> execution-id;
 

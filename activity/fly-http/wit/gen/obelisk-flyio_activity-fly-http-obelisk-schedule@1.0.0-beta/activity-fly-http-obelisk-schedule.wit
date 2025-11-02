@@ -78,13 +78,13 @@ interface secrets {
 
 interface ips {
   use obelisk-flyio:activity-fly-http/regions@1.0.0-beta.{region};
-  use obelisk-flyio:activity-fly-http/ips@1.0.0-beta.{ipv4-config, ipv6-config, ip-variant, ip-request, ip-detail};
+  use obelisk-flyio:activity-fly-http/ips@1.0.0-beta.{ipv4-config, ipv6-config, ip-variant, ip-detail};
   use obelisk:types/execution@3.0.0.{execution-id};
   use obelisk:types/time@3.0.0.{schedule-at};
 
   type ip-address = string;
 
-  allocate-unsafe-schedule: func(schedule-at: schedule-at, app-name: string, request: ip-request) -> execution-id;
+  allocate-schedule: func(schedule-at: schedule-at, app-name: string, config: ip-variant, pre-existing-ips: list<ip-detail>) -> execution-id;
 
   list-schedule: func(schedule-at: schedule-at, app-name: string) -> execution-id;
 
