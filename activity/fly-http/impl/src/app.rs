@@ -2,15 +2,14 @@ use crate::generated::exports::obelisk_flyio::activity_fly_http::apps;
 use crate::{API_BASE_URL, AppName, OrgSlug, request_with_api_token};
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
-use wstd::http::request::JsonRequest as _;
-use wstd::http::{Client, Method, StatusCode};
+use wstd::http::{Body, Client, Method, StatusCode};
 use wstd::runtime::block_on;
 
 async fn get(app_name: AppName) -> Result<Option<apps::App>, anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(format!("{API_BASE_URL}/apps/{app_name}"))
-        .body(wstd::io::empty())?;
+        .body(Body::empty())?;
     let mut response = Client::new().send(request).await?;
 
     if response.status().is_success() {
@@ -20,11 +19,9 @@ async fn get(app_name: AppName) -> Result<Option<apps::App>, anyhow::Error> {
         Ok(None)
     } else {
         let error_status = response.status();
-        let error_body = response.body_mut().bytes().await?;
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        let mut response = response.into_body();
+        let error_body = response.str_contents().await?;
+        Err(anyhow!("failed with status {error_status}: {error_body}",))
     }
 }
 
@@ -46,7 +43,7 @@ async fn put(org_slug: OrgSlug, app_name: AppName) -> Result<apps::App, anyhow::
     let post_request = request_with_api_token()?
         .method(Method::POST)
         .uri(format!("{API_BASE_URL}/apps"))
-        .json(&request_body)?;
+        .body(Body::from_json(&request_body)?)?;
 
     let mut response = client.send(post_request).await?;
 
@@ -64,14 +61,14 @@ async fn put(org_slug: OrgSlug, app_name: AppName) -> Result<apps::App, anyhow::
 
     // Investigate if the app already exists
     let original_post_status = response.status();
-    let original_post_error = response.into_body().bytes().await;
+    let mut response = response.into_body();
 
     if original_post_status == StatusCode::UNPROCESSABLE_ENTITY {
         // Prepare a GET request to check for the existing app.
         let get_request = request_with_api_token()?
             .method(Method::GET)
             .uri(format!("{API_BASE_URL}/apps/{app_name}"))
-            .body(wstd::io::empty())?;
+            .body(Body::empty())?;
 
         let mut get_response = client.send(get_request).await?;
 
@@ -108,11 +105,9 @@ async fn put(org_slug: OrgSlug, app_name: AppName) -> Result<apps::App, anyhow::
     }
     // The GET request failed, so the app doesn't exist.
     // The original error from the POST request is the true cause of failure.
+    let original_post_error = response.str_contents().await?;
     Err(anyhow!(
-        "failed with status {original_post_status}: {}",
-        original_post_error
-            .map(|vec| String::from_utf8_lossy(&vec).to_string())
-            .unwrap_or_else(|e| e.to_string())
+        "failed with status {original_post_status}: {original_post_error}",
     ))
 }
 
@@ -120,7 +115,7 @@ async fn list(org_slug: OrgSlug) -> Result<Vec<apps::App>, anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(format!("{API_BASE_URL}/apps?org_slug={org_slug}"))
-        .body(wstd::io::empty())?;
+        .body(Body::empty())?;
     let mut response = Client::new().send(request).await?;
 
     if response.status().is_success() {
@@ -132,11 +127,9 @@ async fn list(org_slug: OrgSlug) -> Result<Vec<apps::App>, anyhow::Error> {
         Ok(apps_response.apps)
     } else {
         let error_status = response.status();
-        let error_body = response.body_mut().bytes().await?;
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        let mut response = response.into_body();
+        let error_body = response.str_contents().await?;
+        Err(anyhow!("failed with status {error_status}: {error_body}",))
     }
 }
 
@@ -148,7 +141,7 @@ async fn delete(app_name: AppName, force: bool) -> Result<(), anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::DELETE)
         .uri(url)
-        .body(wstd::io::empty())?;
+        .body(Body::empty())?;
 
     let response = Client::new().send(request).await?;
     let status = response.status();
@@ -157,11 +150,9 @@ async fn delete(app_name: AppName, force: bool) -> Result<(), anyhow::Error> {
         Ok(())
     } else {
         let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        let mut response = response.into_body();
+        let error_body = response.str_contents().await?;
+        Err(anyhow!("failed with status {error_status}: {error_body}",))
     }
 }
 

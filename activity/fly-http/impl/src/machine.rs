@@ -8,8 +8,7 @@ use ser::{
     ExecResponseSer, MachineCreateRequestSer, MachineCreateResponseSer, MachineUpdateRequestSer,
     ResponseErrorSer,
 };
-use wstd::http::request::JsonRequest;
-use wstd::http::{Client, Method, StatusCode};
+use wstd::http::{Body, Client, Method, StatusCode};
 use wstd::runtime::block_on;
 
 pub(crate) mod ser {
@@ -80,22 +79,19 @@ async fn list(app_name: AppName) -> Result<Vec<Machine>, anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(url)
-        .body(wstd::io::empty())?;
+        .body(Body::empty())?;
     let response = Client::new().send(request).await?;
-    if response.status().is_success() {
-        let response = response.into_body().bytes().await?;
-        let response: Vec<Machine> = serde_json::from_slice(&response).inspect_err(|_| {
-            eprintln!("cannot deserialize: {}", String::from_utf8_lossy(&response))
-        })?;
+    let resp_status = response.status();
+    let mut response = response.into_body();
+    let response = response.str_contents().await?;
+
+    if resp_status.is_success() {
+        let response: Vec<Machine> = serde_json::from_str(response)
+            .inspect_err(|_| eprintln!("cannot deserialize: {response}"))?;
         Ok(response)
     } else {
-        let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
-        eprintln!("Got error status {error_status}");
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        eprintln!("Got error status {resp_status}");
+        Err(anyhow!("failed with status {resp_status}: {response}"))
     }
 }
 
@@ -104,24 +100,21 @@ async fn get(app_name: AppName, machine_id: MachineId) -> Result<Option<Machine>
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(url)
-        .body(wstd::io::empty())?;
+        .body(Body::empty())?;
     let response = Client::new().send(request).await?;
-    if response.status().is_success() {
-        let response = response.into_body().bytes().await?;
-        let response: Machine = serde_json::from_slice(&response).inspect_err(|_| {
-            eprintln!("cannot deserialize: {}", String::from_utf8_lossy(&response))
-        })?;
+    let resp_status = response.status();
+    let mut response = response.into_body();
+    let response = response.str_contents().await?;
+
+    if resp_status.is_success() {
+        let response: Machine = serde_json::from_str(response)
+            .inspect_err(|_| eprintln!("cannot deserialize: {response}"))?;
         Ok(Some(response))
-    } else if response.status() == StatusCode::NOT_FOUND {
+    } else if resp_status == StatusCode::NOT_FOUND {
         Ok(None)
     } else {
-        let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
-        eprintln!("Got error status {error_status}");
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        eprintln!("Got error status {resp_status}");
+        Err(anyhow!("failed with status {resp_status}: {response}"))
     }
 }
 
@@ -141,40 +134,28 @@ async fn create(
         let request = request_with_api_token()?
             .method(Method::POST)
             .uri(url)
-            .json(&request_payload)?;
+            .body(Body::from_json(&request_payload)?)?;
 
         let response = Client::new().send(request).await?;
-        if response.status().is_success() {
-            let body = response.into_body().bytes().await?;
-            let resp: MachineCreateResponseSer =
-                serde_json::from_slice(&body).with_context(|| {
-                    format!(
-                        "Deserialization of response failed: `{}`",
-                        String::from_utf8_lossy(&body)
-                    )
-                })?;
+        let resp_status = response.status();
+        let mut response = response.into_body();
+        let response = response.str_contents().await?;
+
+        if resp_status.is_success() {
+            let resp: MachineCreateResponseSer = serde_json::from_str(response)
+                .with_context(|| format!("Deserialization of response failed: `{response}`"))?;
             return Ok(resp.id);
         }
-        let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
-        eprintln!("Got error status {error_status}");
-        if error_status == StatusCode::CONFLICT {
-            let error: ResponseErrorSer =
-                serde_json::from_slice(&error_body).with_context(|| {
-                    format!(
-                        "cannot parse error response: `{}`",
-                        String::from_utf8_lossy(&error_body)
-                    )
-                })?;
+        eprintln!("Got error status {resp_status}");
+        if resp_status == StatusCode::CONFLICT {
+            let error: ResponseErrorSer = serde_json::from_str(response)
+                .with_context(|| format!("cannot parse error response: `{response}`"))?;
             let machine_id = error.get_machine_id_on_creation_conflict().with_context(
                 || "machine id cannot be parsed from 409 error response: `{error:?}`",
             )?;
             Ok(machine_id.to_string())
         } else {
-            Err(anyhow!(
-                "{error_status} - {}",
-                String::from_utf8_lossy(&error_body)
-            ))
+            Err(anyhow!("{resp_status} - {response}"))
         }
     }
 }
@@ -194,18 +175,16 @@ async fn update(
         let request = request_with_api_token()?
             .method(Method::POST)
             .uri(url)
-            .json(&request_payload)?;
+            .body(Body::from_json(&request_payload)?)?;
 
         let response = Client::new().send(request).await?;
-        if response.status().is_success() {
-            let body = response.into_body().bytes().await?;
-            let resp: MachineCreateResponseSer =
-                serde_json::from_slice(&body).with_context(|| {
-                    format!(
-                        "Deserialization of response failed: `{}`",
-                        String::from_utf8_lossy(&body)
-                    )
-                })?;
+        let resp_status = response.status();
+        let mut response = response.into_body();
+        let response = response.str_contents().await?;
+
+        if resp_status.is_success() {
+            let resp: MachineCreateResponseSer = serde_json::from_str(response)
+                .with_context(|| format!("Deserialization of response failed: `{response}`"))?;
             ensure!(
                 resp.id == machine_id.as_ref(),
                 "unexpected id returned, expected {machine_id} got {id}",
@@ -213,9 +192,7 @@ async fn update(
             );
             return Ok(());
         }
-        let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
-        bail!("{error_status} - {}", String::from_utf8_lossy(&error_body))
+        bail!("{resp_status} - {response}")
     }
 }
 
@@ -231,22 +208,19 @@ async fn exec(
     let request = request_with_api_token()?
         .method(Method::POST)
         .uri(url)
-        .json(&body)?;
+        .body(Body::from_json(&body)?)?;
     let response = Client::new().send(request).await?;
-    if response.status().is_success() {
-        let response = response.into_body().bytes().await?;
-        let response: ExecResponseSer = serde_json::from_slice(&response).inspect_err(|_| {
-            eprintln!("cannot deserialize: {}", String::from_utf8_lossy(&response))
-        })?;
+    let resp_status = response.status();
+    let mut response = response.into_body();
+    let response = response.str_contents().await?;
+
+    if resp_status.is_success() {
+        let response: ExecResponseSer = serde_json::from_str(response)
+            .inspect_err(|_| eprintln!("cannot deserialize: {response}"))?;
         Ok(response.into())
     } else {
-        let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
-        eprintln!("Got error status {error_status}");
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        eprintln!("Got error status {resp_status}");
+        Err(anyhow!("failed with status {resp_status}: {response}"))
     }
 }
 
@@ -272,19 +246,17 @@ async fn send_request(url: String, method: Method) -> Result<(), anyhow::Error> 
     let request = request_with_api_token()?
         .method(method)
         .uri(url)
-        .body(wstd::io::empty())?;
+        .body(Body::empty())?;
 
     let response = Client::new().send(request).await?;
+    let resp_status = response.status();
+    let mut response = response.into_body();
+    let response = response.str_contents().await?;
 
-    if response.status().is_success() {
+    if resp_status.is_success() {
         Ok(())
     } else {
-        let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        Err(anyhow!("failed with status {resp_status}: {response}",))
     }
 }
 

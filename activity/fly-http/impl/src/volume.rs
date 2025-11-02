@@ -2,9 +2,8 @@ use crate::generated::exports::obelisk_flyio::activity_fly_http::volumes::{
     Volume, VolumeCreateRequest,
 };
 use crate::{API_BASE_URL, AppName, Component, VolumeId, request_with_api_token};
-use anyhow::{Context, anyhow, bail};
-use wstd::http::request::JsonRequest;
-use wstd::http::{Client, Method};
+use anyhow::{Context, anyhow};
+use wstd::http::{Body, Client, Method};
 use wstd::runtime::block_on;
 
 async fn list(app_name: AppName) -> Result<Vec<Volume>, anyhow::Error> {
@@ -12,25 +11,18 @@ async fn list(app_name: AppName) -> Result<Vec<Volume>, anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(url)
-        .body(wstd::io::empty())?;
+        .body(Body::empty())?;
     let response = Client::new().send(request).await?;
+    let resp_status = response.status();
+    let mut response = response.into_body();
+    let response_body = response.str_contents().await?;
 
-    if response.status().is_success() {
-        let response_body = response.into_body().bytes().await?;
-        let response: Vec<Volume> = serde_json::from_slice(&response_body).inspect_err(|_| {
-            eprintln!(
-                "cannot deserialize: {}",
-                String::from_utf8_lossy(&response_body)
-            )
-        })?;
+    if resp_status.is_success() {
+        let response: Vec<Volume> = serde_json::from_str(response_body)
+            .inspect_err(|_| eprintln!("cannot deserialize: {response_body}"))?;
         Ok(response)
     } else {
-        let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        Err(anyhow!("failed with status {resp_status}: {response_body}"))
     }
 }
 
@@ -39,23 +31,18 @@ async fn create(app_name: AppName, request: VolumeCreateRequest) -> Result<Volum
     let http_request = request_with_api_token()?
         .method(Method::POST)
         .uri(url)
-        .json(&request)?;
+        .body(Body::from_json(&request)?)?;
 
     let response = Client::new().send(http_request).await?;
-
-    if response.status().is_success() {
-        let response_body = response.into_body().bytes().await?;
-        let volume: Volume = serde_json::from_slice(&response_body).with_context(|| {
-            format!(
-                "Deserialization of response failed: `{}`",
-                String::from_utf8_lossy(&response_body)
-            )
-        })?;
+    let resp_status = response.status();
+    let mut response = response.into_body();
+    let response_body = response.str_contents().await?;
+    if resp_status.is_success() {
+        let volume: Volume = serde_json::from_str(response_body)
+            .with_context(|| format!("Deserialization of response failed: `{response_body}`"))?;
         Ok(volume)
     } else {
-        let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
-        bail!("{error_status} - {}", String::from_utf8_lossy(&error_body))
+        Err(anyhow!("failed with status {resp_status}: {response_body}"))
     }
 }
 
@@ -64,25 +51,18 @@ async fn get(app_name: AppName, volume_id: VolumeId) -> Result<Volume, anyhow::E
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(url)
-        .body(wstd::io::empty())?;
+        .body(Body::empty())?;
     let response = Client::new().send(request).await?;
+    let resp_status = response.status();
+    let mut response = response.into_body();
+    let response_body = response.str_contents().await?;
 
-    if response.status().is_success() {
-        let response_body = response.into_body().bytes().await?;
-        let volume: Volume = serde_json::from_slice(&response_body).inspect_err(|_| {
-            eprintln!(
-                "cannot deserialize: {}",
-                String::from_utf8_lossy(&response_body)
-            )
-        })?;
+    if resp_status.is_success() {
+        let volume: Volume = serde_json::from_str(response_body)
+            .inspect_err(|_| eprintln!("cannot deserialize: {response_body}"))?;
         Ok(volume)
     } else {
-        let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        Err(anyhow!("failed with status {resp_status}: {response_body}"))
     }
 }
 
@@ -91,19 +71,17 @@ async fn delete(app_name: AppName, volume_id: VolumeId) -> Result<(), anyhow::Er
     let request = request_with_api_token()?
         .method(Method::DELETE)
         .uri(url)
-        .body(wstd::io::empty())?;
+        .body(Body::empty())?;
 
     let response = Client::new().send(request).await?;
+    let resp_status = response.status();
+    let mut response = response.into_body();
 
-    if response.status().is_success() {
+    if resp_status.is_success() {
         Ok(())
     } else {
-        let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        let error_body = response.str_contents().await?;
+        Err(anyhow!("failed with status {resp_status}: {error_body}"))
     }
 }
 
@@ -119,19 +97,17 @@ async fn extend(
     let request = request_with_api_token()?
         .method(Method::PUT)
         .uri(url)
-        .json(&body)?;
+        .body(Body::from_json(&body)?)?;
 
     let response = Client::new().send(request).await?;
+    let resp_status = response.status();
+    let mut response = response.into_body();
 
-    if response.status().is_success() {
+    if resp_status.is_success() {
         Ok(())
     } else {
-        let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
-        Err(anyhow!(
-            "failed with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
-        ))
+        let error_body = response.str_contents().await?;
+        Err(anyhow!("failed with status {resp_status}: {error_body}"))
     }
 }
 

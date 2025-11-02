@@ -2,28 +2,30 @@ use crate::generated::exports::obelisk_flyio::activity_fly_http::secrets;
 use crate::{API_BASE_URL, AppName, SecretKey, request_with_api_token};
 use anyhow::anyhow;
 use serde::Deserialize;
-use wstd::http::{Client, Method};
+use wstd::http::{Body, Client, Method};
 use wstd::runtime::block_on;
 
 async fn list_secrets(app_name: AppName) -> Result<Vec<secrets::Secret>, anyhow::Error> {
     let request = request_with_api_token()?
         .method(Method::GET)
         .uri(format!("{API_BASE_URL}/apps/{app_name}/secrets"))
-        .body(wstd::io::empty())?;
-    let mut response = Client::new().send(request).await?;
-    if response.status().is_success() {
+        .body(Body::empty())?;
+    let response = Client::new().send(request).await?;
+    let resp_status = response.status();
+    let mut response = response.into_body();
+    let response_body = response.str_contents().await?;
+
+    if resp_status.is_success() {
         #[derive(Deserialize)]
         struct ListSecretsResponse {
             secrets: Vec<secrets::Secret>,
         }
-        let list_response: ListSecretsResponse = response.body_mut().json().await?;
+        let list_response: ListSecretsResponse = serde_json::from_str(response_body)
+            .inspect_err(|_| eprintln!("cannot deserialize: {response_body}"))?;
         Ok(list_response.secrets)
     } else {
-        let error_status = response.status();
-        let error_body = response.body_mut().bytes().await?;
         Err(anyhow!(
-            "failed to list secrets for app '{app_name}' with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
+            "failed to list secrets for app '{app_name}' with status {resp_status}: {response_body}",
         ))
     }
 }
@@ -34,18 +36,18 @@ async fn delete_secret(app_name: AppName, secret_name: SecretKey) -> Result<(), 
         .uri(format!(
             "{API_BASE_URL}/apps/{app_name}/secrets/{secret_name}"
         ))
-        .body(wstd::io::empty())?;
+        .body(Body::empty())?;
 
     let response = Client::new().send(request).await?;
+    let resp_status = response.status();
+    let mut response = response.into_body();
+    let response_body = response.str_contents().await?;
 
-    if response.status().is_success() {
+    if resp_status.is_success() {
         Ok(())
     } else {
-        let error_status = response.status();
-        let error_body = response.into_body().bytes().await?;
         Err(anyhow!(
-            "failed to delete secret '{secret_name}' for app '{app_name}' with status {error_status}: {}",
-            String::from_utf8_lossy(&error_body)
+            "failed to delete secret '{secret_name}' for app '{app_name}' with status {resp_status}: {response_body}"
         ))
     }
 }
