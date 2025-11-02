@@ -4,6 +4,7 @@ use crate::generated::exports::obelisk_flyio::activity_fly_http::ips::{
     self, IpVariant, Ipv4Config, Ipv6Config,
 };
 use crate::generated::obelisk_flyio::activity_fly_http::regions::Region;
+use crate::wstd_util::JsonRequest as _;
 use crate::{API_BASE_URL, AppName, request_with_api_token};
 use anyhow::anyhow;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -45,8 +46,7 @@ async fn allocate_ip(app_name: &AppName, config: &IpVariant) -> Result<String, a
     let request = request_with_api_token()?
         .method(Method::POST)
         .uri(format!("{API_BASE_URL}/apps/{app_name}/ip_assignments"))
-        .header("content-type", "application/json")
-        .body(Body::from_json(&body)?)?;
+        .json(&body)?;
 
     let response = Client::new().send(request).await?;
     let resp_status = response.status();

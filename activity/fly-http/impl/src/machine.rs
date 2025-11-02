@@ -2,6 +2,7 @@ use crate::generated::exports::obelisk_flyio::activity_fly_http::machines::{
     ExecResponse, Guest, Machine, MachineConfig,
 };
 use crate::generated::obelisk_flyio::activity_fly_http::regions::Region;
+use crate::wstd_util::JsonRequest as _;
 use crate::{API_BASE_URL, AppName, Component, MachineId, request_with_api_token};
 use anyhow::{Context, anyhow, bail, ensure};
 use ser::{
@@ -134,7 +135,7 @@ async fn create(
         let request = request_with_api_token()?
             .method(Method::POST)
             .uri(url)
-            .body(Body::from_json(&request_payload)?)?;
+            .json(&request_payload)?;
 
         let response = Client::new().send(request).await?;
         let resp_status = response.status();
@@ -175,7 +176,7 @@ async fn update(
         let request = request_with_api_token()?
             .method(Method::POST)
             .uri(url)
-            .body(Body::from_json(&request_payload)?)?;
+            .json(&request_payload)?;
 
         let response = Client::new().send(request).await?;
         let resp_status = response.status();
@@ -208,7 +209,7 @@ async fn exec(
     let request = request_with_api_token()?
         .method(Method::POST)
         .uri(url)
-        .body(Body::from_json(&body)?)?;
+        .json(&body)?;
     let response = Client::new().send(request).await?;
     let resp_status = response.status();
     let mut response = response.into_body();

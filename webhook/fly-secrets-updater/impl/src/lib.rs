@@ -1,3 +1,6 @@
+mod wstd_util;
+
+use crate::wstd_util::JsonRequest as _;
 use anyhow::{Context, anyhow};
 use serde::{Deserialize, Serialize};
 use wstd::http::body::Body;
@@ -31,7 +34,7 @@ async fn put_secret(
         .uri(format!(
             "{API_BASE_URL}/apps/{app_name}/secrets/{secret_name}"
         ))
-        .body(Body::from_json(&body)?)?;
+        .json(&body)?;
 
     let response = client.send(request).await?;
 

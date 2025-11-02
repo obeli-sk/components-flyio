@@ -1,6 +1,7 @@
 use crate::generated::exports::obelisk_flyio::activity_fly_http::volumes::{
     Volume, VolumeCreateRequest,
 };
+use crate::wstd_util::JsonRequest as _;
 use crate::{API_BASE_URL, AppName, Component, VolumeId, request_with_api_token};
 use anyhow::{Context, anyhow};
 use wstd::http::{Body, Client, Method};
@@ -31,7 +32,7 @@ async fn create(app_name: AppName, request: VolumeCreateRequest) -> Result<Volum
     let http_request = request_with_api_token()?
         .method(Method::POST)
         .uri(url)
-        .body(Body::from_json(&request)?)?;
+        .json(&request)?;
 
     let response = Client::new().send(http_request).await?;
     let resp_status = response.status();
@@ -97,7 +98,7 @@ async fn extend(
     let request = request_with_api_token()?
         .method(Method::PUT)
         .uri(url)
-        .body(Body::from_json(&body)?)?;
+        .json(&body)?;
 
     let response = Client::new().send(request).await?;
     let resp_status = response.status();

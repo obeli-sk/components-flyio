@@ -1,4 +1,5 @@
 use crate::generated::exports::obelisk_flyio::activity_fly_http::apps;
+use crate::wstd_util::JsonRequest as _;
 use crate::{API_BASE_URL, AppName, OrgSlug, request_with_api_token};
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
@@ -43,7 +44,7 @@ async fn put(org_slug: OrgSlug, app_name: AppName) -> Result<apps::App, anyhow::
     let post_request = request_with_api_token()?
         .method(Method::POST)
         .uri(format!("{API_BASE_URL}/apps"))
-        .body(Body::from_json(&request_body)?)?;
+        .json(&request_body)?;
 
     let mut response = client.send(post_request).await?;
 
