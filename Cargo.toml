@@ -25,7 +25,7 @@ serde_json = "1.0"
 wstd = "0.6.3"
 wit-bindgen = "0.48.1"
 wit-bindgen-rust = "0.48.1"
-wit-parser = "0.242.0"
+wit-parser = "0.241.2"
 
 [profile.release]
 opt-level = "s"
