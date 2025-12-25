@@ -6,7 +6,7 @@ mod volume;
 mod wstd_util;
 mod generated {
     #![allow(clippy::empty_line_after_outer_attr)]
-    include!(concat!(env!("OUT_DIR"), "/generated.rs"));
+    include!(concat!(env!("OUT_DIR"), "/any.rs"));
 }
 
 use anyhow::{Context, bail};

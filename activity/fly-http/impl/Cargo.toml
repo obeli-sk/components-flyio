@@ -27,4 +27,3 @@ insta.workspace = true
 anyhow.workspace = true
 regex.workspace = true
 wit-bindgen-rust.workspace = true
-wit-parser.workspace = true
