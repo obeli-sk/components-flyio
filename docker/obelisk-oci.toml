@@ -1,0 +1,12 @@
+api.listening_addr = "127.0.0.1:5005"
+webui.listening_addr = "127.0.0.1:8080"
+log.stdout.enabled = true
+
+activities.directories.enabled = true
+
+[[activity_wasm]]
+name = "activity_docker"
+location.oci = "docker.io/getobelisk/components_docker_activity_docker:2026-01-10@sha256:60f655080c46a65f04361c4180545f8a55694e2df3cc6ffad100ffaaacc0606e"
+forward_stdout = "stderr"
+forward_stderr = "stderr"
+directories  = { enabled = true, process_provider = "native"}
