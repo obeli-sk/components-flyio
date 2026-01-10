@@ -51,7 +51,7 @@ jobs:
 
       - name: Run push-components.sh
         run: |
-          nix develop --command ./scripts/push-components.sh $TAG
+          nix develop --command "${{ github.workspace }}/scripts/push-components.sh" $TAG
         working-directory: ${{ github.event.inputs.directory }}
         env:
           TAG: ${{ github.event.inputs.tag }}
