@@ -1,0 +1,10 @@
+api.listening_addr = "127.0.0.1:5005"
+webui.listening_addr = "127.0.0.1:8080"
+log.stdout.enabled = true
+
+[[activity_wasm]]
+name = "activity_obelisk_client_http"
+location.path = "${OBELISK_TOML_DIR}/../target/wasm32-wasip2/release_activity/activity_obelisk_client_http.wasm"
+forward_stdout = "stderr"
+forward_stderr = "stderr"
+

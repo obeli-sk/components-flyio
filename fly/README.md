@@ -19,7 +19,7 @@ cp .envrc-example .envrc
 # Modify .envrc - enter your fly.io token, org slug and app name.
 direnv allow
 ```
-Otherwise see [dev-deps.txt](./dev-deps.txt) for exact version of each build dependecy. Environment variables
+Otherwise see [dev-deps.txt](../dev-deps.txt) for exact version of each build dependecy. Environment variables
 like `FLY_API_TOKEN` must be present, check out [.envrc-example](./.envrc-example) .
 
 ### Start the Obelisk server

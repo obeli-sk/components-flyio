@@ -1,11 +1,8 @@
 api.listening_addr = "127.0.0.1:5005"
 webui.listening_addr = "127.0.0.1:8080"
+log.stdout.enabled = true
 
-[log.stdout]
-enabled = true
-
-[activities.directories]
-enabled = true
+activities.directories.enabled = true
 
 [[activity_wasm]]
 name = "activity_docker"
