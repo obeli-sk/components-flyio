@@ -9,7 +9,7 @@ enabled = true
 
 [[activity_wasm]]
 name = "activity_docker"
-location.path = "${OBELISK_TOML_DIR}/../target/wasm32-wasip2/release/activity_docker.wasm"
+location.path = "${OBELISK_TOML_DIR}/../target/wasm32-wasip2/release_activity/activity_docker.wasm"
 forward_stdout = "stderr"
 forward_stderr = "stderr"
 directories  = { enabled = true, process_provider = "native"}

@@ -24,8 +24,10 @@ like `FLY_API_TOKEN` must be present, check out [.envrc-example](./.envrc-exampl
 
 ### Start the Obelisk server
 ```sh
-just build serve
+just build-fly
+obelisk server run -c obelisk-local.toml
 ```
+
 
 ### Submit activity executions
 Executions can be submitted and observed either using CLI or the WebUI at http://localhost:8080 .
@@ -115,7 +117,7 @@ obelisk client execution submit -f .../machines.list -- \
 Launch a VM:
 ```sh
 MACHINE_ID=$(obelisk client execution submit -f --json .../machines.create -- \
-\"$FLY_APP_NAME\" \"$FLY_MACHINE_NAME\" "$(./scripts/fly-http-machine-config.json.sh)" \"$FLY_REGION\" \
+\"$FLY_APP_NAME\" \"$FLY_MACHINE_NAME\" "$(fly-http-machine-config.json.sh)" \"$FLY_REGION\" \
 | jq -r '.[-1].ok')
 ```
 
