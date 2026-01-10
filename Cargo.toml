@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "activity/fly-http/impl",
+    "docker/activity",
     "webhook/fly-secrets-updater/impl",
 ]
 
@@ -17,16 +18,25 @@ rust-version = "1.89.0"
 anyhow = "1.0"
 assert_matches = "1.5.0"
 derive_more = { version = "2.1.1", features = ["debug", "display", "from"] }
+futures-concurrency = "7.6.3"
 heck = "0.5.0"
 insta = "1.46.0"
 regex = "1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-wstd = "0.6.3"
+wasip2 = "1.0.1"
 wit-bindgen  = "0.50.0"
 wit-bindgen-rust = "0.50.0"
 wit-parser = "0.243.0"
+wstd = "0.6.3"
 
 [profile.release]
 opt-level = "s"
+
+[profile.release_activity]
+inherits = "release"
+strip = "debuginfo"
+
+[profile.release_webhook]
+inherits = "release"
 debug = "line-tables-only"

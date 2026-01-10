@@ -1,0 +1,6 @@
+package any:any;
+
+world any {
+    include obelisk-docker:activity-docker/exports@0.1.0;
+    import obelisk:activity/process@1.0.0;
+}

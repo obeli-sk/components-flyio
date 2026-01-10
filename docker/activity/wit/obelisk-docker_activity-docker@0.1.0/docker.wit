@@ -1,0 +1,87 @@
+package obelisk-docker:activity-docker@0.1.0;
+
+interface containers {
+    record port-mapping {
+        host-port: u16,
+        container-port: u16,
+        protocol: string, // "tcp" or "udp"
+    }
+
+    record mount {
+        source: string, // host path or volume name
+        target: string, // container path
+        readonly: bool,
+    }
+
+    record container-config {
+        image: string,
+        env: list<tuple<string, string>>,
+        cmd: option<list<string>>,
+        ports: list<port-mapping>,
+        mounts: list<mount>,
+        network: option<string>,
+    }
+
+    record container-info {
+        id: string,
+        state: string, // "running", "exited", etc.
+    }
+
+    record container-summary {
+        id: string,
+        name: string,
+        image: string,
+        state: string,
+        status: string,
+    }
+
+    /// Run a container (wraps `docker run`).
+    /// Idempotency behavior:
+    /// - If the container is created and running, returns success.
+    /// - If the container exists but is stopped, returns an error (use `start` or `rm` + `run`).
+    run: func(name: string, config: container-config) -> result<string, string>;
+
+    /// Start an existing container.
+    start: func(name: string) -> result<_, string>;
+
+    /// Stop a container if running.
+    stop: func(name: string) -> result<_, string>;
+
+    /// Remove a container.
+    rm: func(name: string, force: bool) -> result<_, string>;
+
+    /// Inspect a container to get details.
+    inspect: func(name: string) -> result<option<container-info>, string>;
+
+    /// List containers (wraps `docker ps`).
+    /// If `all` is true, shows stopped containers as well.
+    %list: func(all: bool) -> result<list<container-summary>, string>;
+}
+
+interface networks {
+    /// Idempotently create a network.
+    create: func(name: string, driver: option<string>) -> result<string, string>;
+
+    /// Remove a network.
+    rm: func(name: string) -> result<_, string>;
+
+    /// Prune unused networks.
+    prune: func() -> result<_, string>;
+}
+
+interface volumes {
+    /// Idempotently create a volume.
+    create: func(name: string) -> result<string, string>;
+
+    /// Remove a volume.
+    rm: func(name: string) -> result<_, string>;
+
+    /// Inspect specific volume.
+    exists: func(name: string) -> result<bool, string>;
+}
+
+world exports {
+    export containers;
+    export networks;
+    export volumes;
+}
