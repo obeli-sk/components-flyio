@@ -6,6 +6,10 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
+      directory:
+        description: "Input directory."
+        required: true
+        type: string
       tag:
         description: "The tag to be used when pushing components to the Docker Hub."
         required: true
@@ -48,6 +52,7 @@ jobs:
       - name: Run push-components.sh
         run: |
           nix develop --command ./scripts/push-components.sh $TAG
+        working-directory: ${{ github.event.inputs.directory }}
         env:
           TAG: ${{ github.event.inputs.tag }}
 
